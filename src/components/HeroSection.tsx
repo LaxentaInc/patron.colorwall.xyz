@@ -1,68 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-
-// -------------------------------------------------------------------------
-// webgl particle swirl background.
-// generates 4000 particles in a swirling torus shape with gold/amber colors.
-// the particle field rotates slowly on the y-axis and oscillates on x,
-// creating an ambient living background behind the editorial text overlay.
-// -------------------------------------------------------------------------
-function ParticleSwirl() {
-  const pointsRef = useRef<THREE.Points>(null);
-
-  const [positions, colors] = useMemo(() => {
-    const count = 4000;
-    const pos = new Float32Array(count * 3);
-    const col = new Float32Array(count * 3);
-    const color = new THREE.Color();
-
-    for (let i = 0; i < count; i++) {
-      const radius = 2 + Math.random() * 8;
-      const angle = Math.random() * Math.PI * 2;
-      const height = (Math.random() - 0.5) * 10;
-
-      pos[i * 3] = Math.cos(angle) * radius;
-      pos[i * 3 + 1] = height;
-      pos[i * 3 + 2] = Math.sin(angle) * radius;
-
-      // interpolate from bright gold to deep amber based on radial distance
-      const mix = (radius - 2) / 8;
-      color.lerpColors(new THREE.Color("#FDE047"), new THREE.Color("#B45309"), mix);
-      col[i * 3] = color.r;
-      col[i * 3 + 1] = color.g;
-      col[i * 3 + 2] = color.b;
-    }
-    return [pos, col];
-  }, []);
-
-  useFrame((state) => {
-    if (pointsRef.current) {
-      pointsRef.current.rotation.y = state.clock.elapsedTime * 0.05;
-      pointsRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.2;
-    }
-  });
-
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.05}
-        vertexColors
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
-}
+import React from "react";
 
 // -------------------------------------------------------------------------
 // patreon-inspired nav bar.
@@ -144,13 +82,48 @@ export const HeroSection = () => {
   return (
     <section className="relative w-full overflow-hidden" style={{ height: "100vh" }}>
 
-      {/* webgl canvas background - replaces patreon's photo carousel with live particles */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <Canvas camera={{ position: [0, 2, 12], fov: 60 }}>
-          <fog attach="fog" args={["#000000", 5, 20]} />
-          <ParticleSwirl />
-        </Canvas>
-      </div>
+      {/* video background using the dangerouslySetInnerHTML trick for optimal performance */}
+      <div 
+          className="absolute inset-0 z-0 pointer-events-none bg-black overflow-hidden"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: `
+              <img id="hero-poster" src="/videos/posters/laxenta.webp" alt="Background Poster" fetchpriority="high" class="object-cover absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out" />
+              <video id="hero-video" src="/videos/laxenta.webm" autoplay muted loop playsinline preload="none" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-1000 ease-in-out"></video>
+              <script>
+                  (function() {
+                      try {
+                          var video = document.getElementById('hero-video');
+                          var poster = document.getElementById('hero-poster');
+                          
+                          var forcePlay = function() {
+                              var playPromise = video.play();
+                              if (playPromise !== undefined) {
+                                  playPromise.catch(function(e) { console.error('Autoplay blocked:', e); });
+                              }
+                          };
+
+                          video.addEventListener('playing', function() {
+                              video.classList.remove('opacity-0');
+                              video.classList.add('opacity-100');
+                              setTimeout(function() {
+                                  if (poster && poster.parentNode) {
+                                      poster.parentNode.removeChild(poster);
+                                  }
+                              }, 1000);
+                          }, { once: true });
+
+                          // Try playing immediately, then on interaction
+                          forcePlay();
+                          window.addEventListener('touchstart', forcePlay, { once: true, passive: true });
+                          window.addEventListener('click', forcePlay, { once: true, passive: true });
+                          window.addEventListener('scroll', forcePlay, { once: true, passive: true });
+                      } catch (e) {
+                          console.error('Video background script error:', e);
+                      }
+                  })();
+              </script>
+          ` }}
+      />
 
       {/* radial gradient overlay - darkens edges for text readability,
           same technique patreon uses over their photo backgrounds */}
