@@ -1,6 +1,8 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;350;400;500;600;700&display=swap');
 
 @theme {
+  --font-display: 'Outfit', sans-serif;
   --color-gold-300: #FDE047;
   --color-gold-400: #FACC15;
   --color-gold-500: #EAB308;
@@ -11,15 +13,146 @@
 :root {
   --background: #000000;
   --foreground: #ffffff;
+
+  /* patreon-inspired spacing scale */
+  --spacing-xs: 1.2rem;
+  --spacing-sm: 2.4rem;
+  --spacing-base: 3.2rem;
+  --spacing-lg: 5rem;
+
+  /* animation tokens matching patreon's motion language */
+  --animation-duration: 0.4s;
+  --animation-duration-fast: 0.2s;
+  --animation-timing: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-display);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+}
+
+/* patreon-style ultra-thin hero typography.
+   letter-spacing -0.06em and line-height 0.98 are directly from patreon's css,
+   which creates those massive, tightly packed editorial headlines. */
+.hero-heading {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: clamp(3.6rem, 12vw, 14rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  color: white;
+  mix-blend-mode: exclusion;
+}
+
+/* patreon uses label-wrapper technique for hover animations on their nav links.
+   text slides up while a duplicate slides in from below. */
+.nav-link-hover {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.nav-link-hover::before,
+.nav-link-hover::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform var(--animation-duration) var(--ease-in-out-cubic);
+}
+
+.nav-link-hover::before {
+  transform: translateY(0%);
+}
+
+.nav-link-hover::after {
+  transform: translateY(150%);
+}
+
+.nav-link-hover:hover::before {
+  transform: translateY(-150%);
+}
+
+.nav-link-hover:hover::after {
+  transform: translateY(0%);
+}
+
+.nav-link-hover .label-text {
+  opacity: 0;
+  line-height: 1.1;
+}
+
+/* patreon-style pill button with border fill animation on hover.
+   secondary variant: transparent bg, border matches currentColor,
+   a pseudo-element slides up from 100% translateY to 0 on hover. */
+.pill-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  border-radius: 4rem;
+  padding: 1.4rem 2.8rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 350;
+  letter-spacing: -0.036rem;
+  line-height: 1;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: color var(--animation-duration-fast) var(--animation-timing);
+  text-decoration: none;
+}
+
+.pill-button.secondary {
+  background-color: transparent;
+  color: currentColor;
+}
+
+.pill-button.secondary::before {
+  content: '';
+  display: block;
+  position: absolute;
+  inset: 0;
+  background-color: currentColor;
+  border-radius: 4rem;
+  transform: translateY(100%);
+  transition: transform var(--animation-duration-fast) var(--ease-in-out-cubic);
+  z-index: 0;
+}
+
+.pill-button.secondary:hover::before {
+  transform: translateY(0);
+}
+
+.pill-button.secondary:hover {
+  color: black;
+}
+
+.pill-button .btn-label {
+  position: relative;
+  z-index: 1;
+}
+
+.pill-button.primary {
+  background-color: white;
+  color: black;
+  border-color: white;
+}
+
+.pill-button.primary:hover {
+  background-color: #e0e0e0;
 }
 
 @keyframes float {
@@ -29,4 +162,14 @@ body {
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+/* scroll arrow bounce */
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+.animate-arrow-bounce {
+  animation: arrowBounce 2s ease-in-out infinite;
 }
