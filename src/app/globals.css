@@ -1,8 +1,8 @@
+
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;350;400;500;600;700&display=swap');
 
 @theme {
-  --font-display: 'Outfit', sans-serif;
+  --font-display: var(--font-outfit), sans-serif;
   --color-gold-300: #FDE047;
   --color-gold-400: #FACC15;
   --color-gold-500: #EAB308;
