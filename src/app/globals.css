@@ -58,7 +58,9 @@ body {
    text slides up while a duplicate slides in from below. */
 .nav-link-hover {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -66,8 +68,10 @@ body {
 .nav-link-hover::after {
   content: attr(data-label);
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform var(--animation-duration) var(--ease-in-out-cubic);
 }
 
@@ -76,11 +80,11 @@ body {
 }
 
 .nav-link-hover::after {
-  transform: translateY(150%);
+  transform: translateY(100%);
 }
 
 .nav-link-hover:hover::before {
-  transform: translateY(-150%);
+  transform: translateY(-100%);
 }
 
 .nav-link-hover:hover::after {
