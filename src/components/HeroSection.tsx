@@ -94,7 +94,7 @@ function NavBar() {
                 letterSpacing: "-0.032rem",
               }}
             >
-              <span className="label-text">{label}</span>
+              <span className="opacity-0">{label}</span>
             </a>
           ))}
         </nav>
@@ -193,39 +193,6 @@ export const HeroSection = () => {
         >
           future of desktop
         </span>
-      </div>
-
-      {/* creator info card - positioned right side like patreon's hero cards.
-          shows the project context alongside the massive headline. */}
-      <div
-        className="absolute z-10 hidden md:flex items-center gap-6"
-        style={{
-          right: "max(env(safe-area-inset-right, 0px), 5rem)",
-          top: "50%",
-          marginTop: "5rem",
-          width: "34.5rem",
-          fontSize: "0.95rem",
-          fontWeight: 350,
-          lineHeight: "110%",
-          letterSpacing: "-0.036rem",
-          color: "white",
-        }}
-      >
-        {/* circular avatar placeholder - matches patreon's 5em avatar circles */}
-        <div
-          className="flex-shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-amber-400 to-amber-700 flex items-center justify-center"
-          style={{ width: "5em", height: "5em" }}
-        >
-          <span className="text-black font-bold text-xl">CW</span>
-        </div>
-        <div>
-          <h3 className="font-medium" style={{ lineHeight: 1.2 }}>
-            Colorwall is building the ultimate desktop wallpaper engine
-          </h3>
-          <p className="mt-1 opacity-50" style={{ lineHeight: 1.2 }}>
-            Rust + Tauri · DirectX 11 · Free forever →
-          </p>
-        </div>
       </div>
 
       {/* scroll down arrow - bottom left, matching patreon's home-arrow positioning.
