@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -23,7 +24,9 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
     </html>
   );
 }

@@ -9,6 +9,8 @@ export function RockSequence() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
+  const targetFrameRef = useRef(1);
+  const currentFrameRef = useRef(1);
   const [imagesLoaded, setImagesLoaded] = useState(0);
 
   const renderFrame = (index: number) => {
@@ -81,20 +83,51 @@ export function RockSequence() {
     offset: ["start start", "end end"]
   });
 
+  // instead of rendering instantly on scroll, we just update the target frame
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    // Map scroll progress (0 to 1) to frame index (1 to 270)
-    const frameIndex = Math.max(1, Math.min(FRAME_COUNT, Math.ceil(latest * FRAME_COUNT)));
-    
-    // If the exact frame hasn't loaded yet (scrolled too fast), fallback to the closest previous loaded frame
-    let targetIndex = frameIndex;
-    while (!imagesRef.current[targetIndex] && targetIndex > 1) {
-      targetIndex--;
-    }
-    
-    if (imagesRef.current[targetIndex]) {
-      requestAnimationFrame(() => renderFrame(targetIndex));
-    }
+    targetFrameRef.current = Math.max(1, Math.min(FRAME_COUNT, Math.ceil(latest * FRAME_COUNT)));
   });
+
+  // custom smoothing loop inspired by FluidGalleryEngine.ts
+  useEffect(() => {
+    let rafId: number;
+    
+    const loop = () => {
+      let current = currentFrameRef.current;
+      const target = targetFrameRef.current;
+      const dist = target - current;
+      
+      // only recalculate and render if we haven't reached the target
+      if (Math.abs(dist) > 0.001) {
+        // smooth step factor tuned to 0.095 for crisp transition pacing
+        current += dist * 0.095;
+        
+        // snap threshold to eliminate exponential lerp decay tail
+        if (Math.abs(target - current) < 0.012) {
+          current = target;
+        }
+        
+        currentFrameRef.current = current;
+        
+        const frameIndex = Math.round(current);
+        
+        // fallback to the closest previous loaded frame if scrolled too fast
+        let targetIndex = frameIndex;
+        while (!imagesRef.current[targetIndex] && targetIndex > 1) {
+          targetIndex--;
+        }
+        
+        if (imagesRef.current[targetIndex]) {
+          renderFrame(targetIndex);
+        }
+      }
+      
+      rafId = requestAnimationFrame(loop);
+    };
+    
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   return (
     <section ref={containerRef} className="h-[800vh] bg-black relative">
