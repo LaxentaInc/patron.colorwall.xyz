@@ -19,9 +19,22 @@ export function RockSequence() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     
-    // Clear the canvas and draw the new image
+    // clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    // use center-based rotation so we can easily tweak the angle without clipping
+    ctx.save();
+    
+    // move to the center of our 1000x1000 canvas
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    
+    // rotate by 110 degrees as requested
+    ctx.rotate((110 * Math.PI) / 180);
+    
+    // draw the image centered. the original frames are 750x820
+    ctx.drawImage(img, -750 / 2, -820 / 2, 750, 820);
+    
+    ctx.restore();
   };
 
   // Preload images optimally
@@ -84,12 +97,13 @@ export function RockSequence() {
     <section ref={containerRef} className="h-[800vh] bg-black relative">
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
         
-        {/* The canvas handles the actual rendering. The rock images are 750x820 */}
+        {/* canvas is now a 1000x1000 square so the rock has plenty of room to
+            rotate at any angle without getting its corners clipped off. */}
         <canvas 
           ref={canvasRef} 
-          width={750} 
-          height={820} 
-          className="w-full max-w-[750px] object-contain drop-shadow-2xl"
+          width={1000} 
+          height={1000} 
+          className="w-full max-w-[800px] object-contain drop-shadow-2xl"
         />
 
         {/* Subtle loading indicator if the user scrolls faster than their network */}
