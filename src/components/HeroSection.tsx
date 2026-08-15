@@ -63,16 +63,16 @@ export const HeroSection = () => {
         <motion.div
           className="absolute inset-0 z-0 pointer-events-none w-[150%] h-[150%] -left-[25%] -top-[25%]"
           style={{ x: cloud1X, y: cloud1Y, opacity: 0.8 }}
-          animate={{ 
-            x: ["-5%", "5%", "-5%"],
-            y: ["-2%", "2%", "-2%"],
-          }}
-          transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
         >
-          <img 
+          <motion.img 
             src="/assets/izanami/common_fv_cloud01.webp" 
             alt="Fog Layer 1" 
             className="object-cover absolute inset-0 w-full h-full" 
+            animate={{ 
+              x: ["-5%", "5%", "-5%"],
+              y: ["-2%", "2%", "-2%"],
+            }}
+            transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
           />
         </motion.div>
 
@@ -80,16 +80,16 @@ export const HeroSection = () => {
         <motion.div
           className="absolute inset-0 z-0 pointer-events-none w-[150%] h-[150%] -left-[25%] -top-[25%]"
           style={{ x: cloud2X, y: cloud2Y, opacity: 0.7 }}
-          animate={{ 
-            x: ["5%", "-5%", "5%"],
-            y: ["2%", "-2%", "2%"],
-          }}
-          transition={{ repeat: Infinity, duration: 35, ease: "easeInOut" }}
         >
-          <img 
+          <motion.img 
             src="/assets/izanami/common_fv_cloud02.webp" 
             alt="Fog Layer 2" 
             className="object-cover absolute inset-0 w-full h-full" 
+            animate={{ 
+              x: ["5%", "-5%", "5%"],
+              y: ["2%", "-2%", "2%"],
+            }}
+            transition={{ repeat: Infinity, duration: 35, ease: "easeInOut" }}
           />
         </motion.div>
 
