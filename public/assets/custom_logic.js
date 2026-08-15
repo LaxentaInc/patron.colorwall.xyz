@@ -9535,6 +9535,7 @@ class Preloader {
       l = r / s,
       u = o / s,
       h = Math.sqrt(l * l + u * u);
+    if (!n) return;
     n.save(),
       n.scale(s, s),
       (n.fillStyle = "#203727"),
@@ -9676,9 +9677,15 @@ class Navbar {
   }
   _updateActiveItem(e) {
     this.activeItemIndex = e;
-    for (let t = 0; t < this.domItems.length; t++)
-      this.domItems[t].classList.remove("is-active");
-    this.domItems[e].classList.add("is-active");
+    if (!this.domItems || this.domItems.length === 0) return;
+    for (let t = 0; t < this.domItems.length; t++) {
+      if (this.domItems[t] && this.domItems[t].classList) {
+        this.domItems[t].classList.remove("is-active");
+      }
+    }
+    if (this.domItems[e] && this.domItems[e].classList) {
+      this.domItems[e].classList.add("is-active");
+    }
   }
   show() {
     this.isActive = !0;
@@ -9688,6 +9695,7 @@ class Navbar {
   }
   resize(e, t) {}
   update(e) {
+    if (!this.domContainer || !this.domItems || this.domItems.length === 0) return;
     let t = 0;
     for (let r = 0; r < this.sections.length; r++) {
       const o = this.sections[r].domElement,
