@@ -156,7 +156,7 @@ const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textp
           bevelEnabled: true,
           bevelThickness: 0.5,
           bevelSize: 0.75,
-        }).toNonIndexed(); // equivalent of the original separateFaces()
+        });
 
         textGeo.computeBoundingBox();
         const bbox = textGeo.boundingBox!;
