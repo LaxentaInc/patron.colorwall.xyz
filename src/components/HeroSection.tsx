@@ -42,37 +42,37 @@ export const HeroSection = () => {
         />
       </motion.div>
 
-      {/* Cloud Layer 1 - drifting and parallax */}
+      {/* Cloud Layer 1 - drifting horizontally and parallax */}
       <motion.div
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none w-[150%] h-[150%] -left-[25%] -top-[25%]"
         style={{ x: cloud1X, y: cloud1Y, opacity: 0.8 }}
         animate={{ 
-          x: ["-2%", "2%", "-2%"],
-          y: ["-1%", "1%", "-1%"],
+          x: ["-5%", "5%", "-5%"],
+          y: ["-2%", "2%", "-2%"],
         }}
-        transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
+        transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
       >
         <img 
           src="/assets/izanami/common_fv_cloud01.webp" 
           alt="Fog Layer 1" 
-          className="object-cover absolute inset-0 w-full h-full scale-110" 
+          className="object-cover absolute inset-0 w-full h-full" 
         />
       </motion.div>
 
       {/* Cloud Layer 2 - opposite drifting and parallax */}
       <motion.div
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none w-[150%] h-[150%] -left-[25%] -top-[25%]"
         style={{ x: cloud2X, y: cloud2Y, opacity: 0.7 }}
         animate={{ 
-          x: ["2%", "-2%", "2%"],
-          y: ["1%", "-1%", "1%"],
+          x: ["5%", "-5%", "5%"],
+          y: ["2%", "-2%", "2%"],
         }}
-        transition={{ repeat: Infinity, duration: 22, ease: "easeInOut" }}
+        transition={{ repeat: Infinity, duration: 35, ease: "easeInOut" }}
       >
         <img 
           src="/assets/izanami/common_fv_cloud02.webp" 
           alt="Fog Layer 2" 
-          className="object-cover absolute inset-0 w-full h-full scale-110" 
+          className="object-cover absolute inset-0 w-full h-full" 
         />
       </motion.div>
 
@@ -107,25 +107,15 @@ export const HeroSection = () => {
           opacity: textOpacity
         }}
       >
-        <span 
-          className="hero-heading block" 
-          style={{ 
-            textAlign: "left",
-            fontFamily: "var(--font-cinzel), serif",
-            fontWeight: 400
-          }}
-        >
+        <span className="hero-heading block" style={{ textAlign: "left" }}>
           Fuel the
         </span>
         <span
-          className="hero-heading block text-white/90"
+          className="hero-heading block"
           style={{
             textAlign: "right",
             paddingRight: "max(env(safe-area-inset-right, 0px), 5rem)",
             marginBottom: "2rem",
-            fontFamily: "var(--font-playfair), serif",
-            fontStyle: "italic",
-            fontWeight: 400
           }}
         >
           future of desktop
