@@ -18,18 +18,16 @@ import { useEffect } from "react";
 // -------------------------------------------------------------------------
 
 // max pixels the scroll target can jump per single wheel tick.
-// 600px is roughly 50-60vh on most screens, creating long cinematic
-// glides that keep going well after releasing the mouse wheel.
-const MAX_DELTA = 600;
+// 400px keeps scrolling feeling substantial without teleporting
+const MAX_DELTA = 400;
 
 // multiplier applied to raw wheel deltaY before clamping.
-// amplifies each tick so a single notch of the scroll wheel
-// pushes the target 3x further than native browser scrolling would.
-const SCROLL_MULTIPLIER = 3.0;
+// 1.5x is close to native feel but gives us control over the easing
+const SCROLL_MULTIPLIER = 1.5;
 
-// exponential decay factor per frame. lower = smoother but laggier.
-// 0.08 gives a premium, cinematic glide without feeling unresponsive.
-const LERP_FACTOR = 0.08;
+// exponential decay factor per frame. higher = more responsive.
+// 0.12 feels close to native scrolling but with a smooth glide tail.
+const LERP_FACTOR = 0.12;
 
 // pixel threshold below which we snap to the target to avoid
 // infinite asymptotic decay (the "never quite reaches it" problem).

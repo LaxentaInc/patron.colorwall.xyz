@@ -99,8 +99,9 @@ export function RockSequence() {
       
       // only recalculate and render if we haven't reached the target
       if (Math.abs(dist) > 0.001) {
-        // smooth step factor tuned to 0.095 for crisp transition pacing
-        current += dist * 0.095;
+        // smooth step factor tuned to 0.045 so the rock keeps
+        // gliding for much longer instead of stopping abruptly
+        current += dist * 0.045;
         
         // snap threshold to eliminate exponential lerp decay tail
         if (Math.abs(target - current) < 0.012) {
@@ -130,7 +131,7 @@ export function RockSequence() {
   }, []);
 
   return (
-    <section ref={containerRef} className="h-[800vh] bg-black relative">
+    <section ref={containerRef} className="h-[1200vh] bg-black relative">
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
         
         {/* canvas is now a 1000x1000 square so the rock has plenty of room to
