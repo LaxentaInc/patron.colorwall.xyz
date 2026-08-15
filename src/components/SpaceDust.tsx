@@ -5,7 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as THREE from "three";
 
-function DustParticles({ count = 2500 }) {
+function DustParticles({ count = 450 }) {
   const pointsRef = useRef<THREE.Points>(null);
 
   // generate stars strictly in the background volume behind the scene
@@ -33,10 +33,10 @@ function DustParticles({ count = 2500 }) {
       <PointMaterial
         transparent
         color="#ffffff"
-        size={0.06}
+        size={0.05}
         sizeAttenuation={true}
         depthWrite={false}
-        opacity={0.85}
+        opacity={0.8}
       />
     </Points>
   );
@@ -46,7 +46,7 @@ export function SpaceDust() {
   return (
     <div className="absolute inset-0 z-0 pointer-events-none">
       <Canvas camera={{ position: [0, 0, 5] }}>
-        <DustParticles count={3000} />
+        <DustParticles count={450} />
       </Canvas>
     </div>
   );
