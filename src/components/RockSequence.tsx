@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import { useScroll, useMotionValueEvent, useTransform, motion } from "framer-motion";
+import { SpaceDust } from "./SpaceDust";
+import Textplosion, { TextplosionHandle } from "./Textplosion";
 
 const FRAME_COUNT = 270;
 
@@ -12,6 +14,12 @@ export function RockSequence() {
   const targetFrameRef = useRef(1);
   const currentFrameRef = useRef(1);
   const [imagesLoaded, setImagesLoaded] = useState(0);
+
+  // refs for imperatively driving the textplosion explosion progress
+  // from scroll without triggering react re-renders every frame
+  const text1Ref = useRef<TextplosionHandle>(null);
+  const text2Ref = useRef<TextplosionHandle>(null);
+  const text3Ref = useRef<TextplosionHandle>(null);
 
   const renderFrame = (index: number) => {
     const img = imagesRef.current[index];
@@ -88,6 +96,29 @@ export function RockSequence() {
     targetFrameRef.current = Math.max(1, Math.min(FRAME_COUNT, Math.ceil(latest * FRAME_COUNT)));
   });
 
+  // text phase 1 - early scroll
+  const opacity1 = useTransform(scrollYProgress, [0.05, 0.15, 0.25, 0.35], [0, 1, 1, 0]);
+  const y1 = useTransform(scrollYProgress, [0.05, 0.35], [50, -50]);
+  // explosion progress: 0 = smoke, 1 = assembled.
+  // scroll down: text assembles from smoke (0->1), then disperses (1->0)
+  const explode1 = useTransform(scrollYProgress, [0.05, 0.15, 0.25, 0.35], [0, 1, 1, 0]);
+
+  // text phase 2 - mid scroll
+  const opacity2 = useTransform(scrollYProgress, [0.38, 0.48, 0.58, 0.68], [0, 1, 1, 0]);
+  const y2 = useTransform(scrollYProgress, [0.38, 0.68], [50, -50]);
+  const explode2 = useTransform(scrollYProgress, [0.38, 0.48, 0.58, 0.68], [0, 1, 1, 0]);
+
+  // text phase 3 - late scroll
+  const opacity3 = useTransform(scrollYProgress, [0.72, 0.82, 0.92, 1.0], [0, 1, 1, 0]);
+  const y3 = useTransform(scrollYProgress, [0.72, 1.0], [50, -50]);
+  const explode3 = useTransform(scrollYProgress, [0.72, 0.82, 0.92, 1.0], [0, 1, 1, 0]);
+
+  // wire the explosion progress to each textplosion ref imperatively.
+  // this avoids re-rendering the component on every scroll tick.
+  useMotionValueEvent(explode1, "change", (v) => text1Ref.current?.setProgress(v));
+  useMotionValueEvent(explode2, "change", (v) => text2Ref.current?.setProgress(v));
+  useMotionValueEvent(explode3, "change", (v) => text3Ref.current?.setProgress(v));
+
   // custom smoothing loop inspired by FluidGalleryEngine.ts
   useEffect(() => {
     let rafId: number;
@@ -134,14 +165,61 @@ export function RockSequence() {
     <section ref={containerRef} className="h-[1200vh] bg-black relative">
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
         
+        {/* WebGL space dust behind the rock */}
+        <SpaceDust />
+        
         {/* canvas is now a 1000x1000 square so the rock has plenty of room to
             rotate at any angle without getting its corners clipped off. */}
         <canvas 
           ref={canvasRef} 
           width={1000} 
           height={1000} 
-          className="w-full max-w-[1200px] max-h-screen object-contain drop-shadow-2xl"
+          className="relative z-10 w-full max-w-[1200px] max-h-screen object-contain drop-shadow-2xl"
         />
+
+        {/* Text Overlays - left-aligned, overflow visible so explosions aren't clipped */}
+        <div className="absolute inset-0 z-20 pointer-events-none flex flex-col items-start justify-center px-12 lg:px-40" style={{ overflow: 'visible' }}>
+          
+          {/* Phase 1 */}
+          <motion.div 
+            className="absolute max-w-xl text-left"
+            style={{ opacity: opacity1, y: y1, overflow: 'visible' }}
+          >
+            <div className="w-[600px] h-[200px] md:-ml-8 pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text1Ref} text="BEYOND THE DESKTOP" size={56} />
+            </div>
+            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
+              Colorwall isn't just software. It's a living, breathing canvas that redefines your digital environment. Become a Patron and help us build the ultimate Wallpaper Engine alternative.
+            </p>
+          </motion.div>
+
+          {/* Phase 2 */}
+          <motion.div 
+            className="absolute max-w-xl text-left"
+            style={{ opacity: opacity2, y: y2, overflow: 'visible' }}
+          >
+            <div className="w-[600px] h-[200px] md:-ml-8 pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text2Ref} text="SHAPE THE FOUNDATION" size={56} />
+            </div>
+            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
+              By backing us early, you get exclusive access to beta builds, cutting-edge renderer features, and a direct line to the development team.
+            </p>
+          </motion.div>
+
+          {/* Phase 3 */}
+          <motion.div 
+            className="absolute max-w-xl text-left"
+            style={{ opacity: opacity3, y: y3, overflow: 'visible' }}
+          >
+            <div className="w-[600px] h-[200px] md:-ml-8 pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text3Ref} text="BECOME PART OF THE CORE" size={56} />
+            </div>
+            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
+              Secure your place among our earliest supporters. Unlock exclusive perks, early access drops, and have direct influence over the roadmap.
+            </p>
+          </motion.div>
+
+        </div>
 
         {/* Subtle loading indicator if the user scrolls faster than their network */}
         {imagesLoaded < FRAME_COUNT && (
