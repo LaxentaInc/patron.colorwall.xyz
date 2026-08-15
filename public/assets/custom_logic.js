@@ -123,7 +123,7 @@ class Settings {
   CROSS_ORIGINS = { "https://example.com/": "anonymous" };
   IS_DEV = !1;
   LOG = !1;
-  SKIP_ANIMATION = !1;
+  SKIP_ANIMATION = !0;
   LOOK_DEV_MODE = !1;
   HIDE_UI = !1;
   constructor() {
@@ -9464,11 +9464,12 @@ class Preloader {
       });
   }
   hide() {
-    settings.SKIP_ANIMATION &&
-      ((this.isActive = !1), (this.domContainer.style.display = "none"));
+    this.isActive = !1;
+    if (this.domContainer) this.domContainer.style.display = "none";
   }
   resize(e, t) {
     this.isActive &&
+      this.domCanvas &&
       ((this.domCanvas.width = e * settings.DPR),
       (this.domCanvas.height = t * settings.DPR));
   }
@@ -9485,7 +9486,7 @@ class Preloader {
             : 0) /
             MIN_PRELOAD_DURATION,
       )),
-      this.targetPercent == 1)
+      this.targetPercent >= 0.999)
     ) {
       properties.hasInitialized ||
         (this._initCallback(),
@@ -9501,7 +9502,7 @@ class Preloader {
         ((this.initToStartPercent = Math.min(
           b,
           this.initToStartPercent +
-            (settings.SKIP_ANIMATION ? 1 : this.percent == 1 ? e : 0) /
+            (settings.SKIP_ANIMATION ? 1 : this.percent >= 0.999 ? e : 0) /
               MIN_DURATION_BETWEEN_INIT_AND_START,
         )),
         _initCallFuncList.length)
@@ -9513,7 +9514,7 @@ class Preloader {
           : properties.renderer.compile(C, this._tmpCamera);
       }
       !properties.hasStarted &&
-        this.initToStartPercent == 1 &&
+        this.initToStartPercent >= 0.999 &&
         this._startCallback();
     }
     let t =
@@ -9592,11 +9593,14 @@ class Preloader {
       n.lineTo(c / 2 + _, c / 2 + f),
       n.closePath(),
       n.stroke(),
-      n.restore(),
+      n.restore();
+    if (this.domPercent) {
       (this.domPercent.textContent = Math.round(t * 100) + "%"),
-      (this.domPercent.style.opacity = math.fit(i, 0, 0.25, 1, 0)),
-      (this.domPercent.style.transform =
-        "translate3d(-50%," + (math.fit(i, 0, 0.25, 0, 1) + "em") + ",0)"),
+        (this.domPercent.style.opacity = math.fit(i, 0, 0.25, 1, 0)),
+        (this.domPercent.style.transform =
+          "translate3d(-50%," + (math.fit(i, 0, 0.25, 0, 1) + "em") + ",0)");
+    }
+    if (this.domLogoContainer) {
       (this.domLogoContainer.style.transform = `translate(-50%, -50%) scale(${math.fit(
         t,
         0.25,
@@ -9604,12 +9608,14 @@ class Preloader {
         0.45,
         0.75,
       )})`),
-      (this.domLogoContainer.style.opacity = math.fit(i, 0, 1, 1, 0));
+        (this.domLogoContainer.style.opacity = math.fit(i, 0, 1, 1, 0));
+    }
     const p = this.domLogoPaths.length;
     let g = 0,
       w = 0.05,
       x = 0.5;
     for (let b = 0; b < p; b++) {
+      if (!this.domLogoPaths[b]) continue;
       const C = g + w * b,
         L = C + x,
         v = math.fit(t, C, L, 0, 1);
@@ -9618,13 +9624,16 @@ class Preloader {
     const y = this.domLogoLines.length;
     (g = 0.25), (w = 0.05), (x = 0.5);
     for (let b = 0; b < y; b++) {
+      if (!this.domLogoLines[b]) continue;
       const C = g + w * b,
         L = C + x,
         v = math.fit(t, C, L, 0, 1);
       this.domLogoLines[b].style.opacity = v;
     }
-    i == 1 &&
-      ((this.isActive = !1), (this.domContainer.style.display = "none"));
+    if (i >= 0.999) {
+      this.isActive = !1;
+      if (this.domContainer) this.domContainer.style.display = "none";
+    }
   }
 }
 const preloader = new Preloader();
