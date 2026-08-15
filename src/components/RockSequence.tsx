@@ -182,39 +182,39 @@ export function RockSequence() {
           
           {/* Phase 1 */}
           <motion.div 
-            className="absolute max-w-xl text-left"
+            className="absolute w-full max-w-4xl text-left"
             style={{ opacity: opacity1, y: y1, overflow: 'visible' }}
           >
-            <div className="w-full h-[250px] pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text1Ref} text="BEYOND THE DESKTOP" size={40} align="left" />
+            <div className="w-full h-[120px] pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text1Ref} text="BEYOND THE DESKTOP" size={80} align="left" />
             </div>
-            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
+            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl">
               Colorwall isn't just software. It's a living, breathing canvas that redefines your digital environment. Become a Patron and help us build the ultimate Wallpaper Engine alternative.
             </p>
           </motion.div>
 
           {/* Phase 2 */}
           <motion.div 
-            className="absolute max-w-xl text-left"
+            className="absolute w-full max-w-4xl text-left"
             style={{ opacity: opacity2, y: y2, overflow: 'visible' }}
           >
-            <div className="w-full h-[250px] pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text2Ref} text="SHAPE THE FOUNDATION" size={40} align="left" />
+            <div className="w-full h-[120px] pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text2Ref} text="SHAPE THE FOUNDATION" size={80} align="left" />
             </div>
-            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
+            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl">
               By backing us early, you get exclusive access to beta builds, cutting-edge renderer features, and a direct line to the development team.
             </p>
           </motion.div>
 
           {/* Phase 3 */}
           <motion.div 
-            className="absolute max-w-xl text-left"
+            className="absolute w-full max-w-4xl text-left"
             style={{ opacity: opacity3, y: y3, overflow: 'visible' }}
           >
-            <div className="w-full h-[250px] pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text3Ref} text="BECOME PART OF THE CORE" size={40} align="left" />
+            <div className="w-full h-[120px] pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text3Ref} text="BECOME PART OF THE CORE" size={80} align="left" />
             </div>
-            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
+            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl">
               Secure your place among our earliest supporters. Unlock exclusive perks, early access drops, and have direct influence over the roadmap.
             </p>
           </motion.div>

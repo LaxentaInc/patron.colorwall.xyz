@@ -47,7 +47,7 @@ function randFloatSpread(range: number) {
 
 const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textplosion({
   text = 'UP IN SMOKE',
-  fontUrl = '/fonts/helvetiker_bold.typeface.json',
+  fontUrl = '/fonts/Outfit-Bold.json',
   size = 14,
   color = 0xffffff,
   backgroundColor = 0x000000,
