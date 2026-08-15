@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 
 // world experience component that mounts the interactive 3d engine
 // when the user scrolls through the tail of the rock sequence.
@@ -14,6 +15,15 @@ export function WorldExperience() {
 
     const loadEngine = async () => {
       if (typeof window === "undefined") return;
+
+      // assign three symbols and legacy compatibility constants to window object
+      (window as any).THREE = THREE;
+      Object.assign(window, THREE, {
+        LinearEncoding: 3000,
+        sRGBEncoding: 3001,
+        BasicDepthPacking: 3200,
+        RGBADepthPacking: 3201,
+      });
 
       const loadScript = (src: string, isModule = false): Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -33,8 +43,8 @@ export function WorldExperience() {
       };
 
       try {
-        // load the complete unified engine bundle
-        await loadScript("/assets/_astro/hoisted.D5QinsOB.js", true);
+        // load the custom logic engine bundle directly
+        await loadScript("/assets/custom_logic.js", true);
 
         if ((window as any).__bootWorldEngine) {
           (window as any).__bootWorldEngine();
@@ -56,10 +66,10 @@ export function WorldExperience() {
     <div
       ref={containerRef}
       id="pages-container"
-      className="relative w-full min-h-screen bg-black overflow-hidden"
+      className="fixed inset-0 w-full h-full bg-black overflow-hidden"
       style={{ zIndex: 10 }}
     >
-      <div id="home" className="page relative w-full h-screen">
+      <div id="home" className="page relative w-full h-full">
         {/* primary webgl canvas consumed by properties.renderer in engine */}
         <canvas
           id="canvas"

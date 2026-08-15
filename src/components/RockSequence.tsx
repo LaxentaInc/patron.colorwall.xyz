@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useScroll, useMotionValueEvent, useTransform, motion } from "framer-motion";
+import Link from "next/link";
 import { SpaceDust } from "./SpaceDust";
 import Textplosion, { TextplosionHandle } from "./Textplosion";
 
@@ -23,30 +24,28 @@ export function RockSequence() {
 
   const renderFrame = (index: number) => {
     const img = imagesRef.current[index];
+    if (!img) return;
+
     const canvas = canvasRef.current;
-    if (!img || !canvas) return;
-    
+    if (!canvas) return;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
-    // clear the canvas
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // use center-based rotation so we can easily tweak the angle without clipping
+
     ctx.save();
-    
     // move to the center of our 1000x1000 canvas
     ctx.translate(canvas.width / 2, canvas.height / 2);
     
-    // rotate by 110 degrees as requested
+    // rotate by 110 degrees for dynamic composition
     ctx.rotate((110 * Math.PI) / 180);
     
-    // zoom in the rock by 30% so it fills the canvas better
+    // zoom in the rock so it fills the canvas
     ctx.scale(1.17, 1.17);
     
-    // draw the image centered. the original frames are 750x820
+    // draw the image centered (source frame dimensions: 750x820)
     ctx.drawImage(img, -750 / 2, -820 / 2, 750, 820);
-    
     ctx.restore();
   };
 
@@ -108,10 +107,10 @@ export function RockSequence() {
   const y2 = useTransform(scrollYProgress, [0.32, 0.60], [50, -50]);
   const explode2 = useTransform(scrollYProgress, [0.32, 0.42, 0.52, 0.60], [1, 0, 0, 1]);
 
-  // text phase 3 - late scroll
-  const opacity3 = useTransform(scrollYProgress, [0.64, 0.74, 0.84, 1.00], [0, 1, 1, 0]);
-  const y3 = useTransform(scrollYProgress, [0.64, 1.00], [50, -50]);
-  const explode3 = useTransform(scrollYProgress, [0.64, 0.74, 0.84, 1.00], [1, 0, 0, 1]);
+  // text phase 3 - late scroll (persists at scroll tail with interactive cta)
+  const opacity3 = useTransform(scrollYProgress, [0.64, 0.74, 1.00], [0, 1, 1]);
+  const y3 = useTransform(scrollYProgress, [0.64, 1.00], [50, 0]);
+  const explode3 = useTransform(scrollYProgress, [0.64, 0.74, 1.00], [1, 0, 0]);
 
   // wire the explosion progress to each textplosion ref imperatively.
   // this avoids re-rendering the component on every scroll tick.
@@ -214,9 +213,22 @@ export function RockSequence() {
             <div className="w-full h-[120px] pointer-events-auto" style={{ overflow: 'visible' }}>
               <Textplosion ref={text3Ref} text="BECOME PART OF THE CORE" size={80} align="left" />
             </div>
-            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl">
+            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl mb-8">
               Secure your place among our earliest supporters. Unlock exclusive perks, early access drops, and have direct influence over the roadmap.
             </p>
+            
+            {/* interactive button to enter the dedicated full-screen 3d world experience */}
+            <div className="pointer-events-auto flex items-center gap-4">
+              <Link
+                href="/world"
+                className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border border-amber-500/40 text-white font-[family-name:var(--font-outfit)] text-base md:text-lg font-medium tracking-wide shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:shadow-[0_0_50px_rgba(245,158,11,0.4)] hover:border-amber-400 hover:scale-105 active:scale-95 transition-all duration-300 backdrop-blur-md"
+              >
+                <span>ENTER 3D WORLD</span>
+                <svg className="w-5 h-5 text-amber-400 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+            </div>
           </motion.div>
 
         </div>

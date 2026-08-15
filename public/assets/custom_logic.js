@@ -1,3 +1,56 @@
+// ensure all three.js classes and constants are available on window scope for standalone execution
+if (typeof window !== "undefined" && window.THREE) {
+  Object.assign(window, window.THREE);
+}
+// legacy three.js color space and depth packing constants required by postprocessing and texture loaders
+const LinearEncoding = (typeof window !== "undefined" && window.THREE && window.THREE.LinearEncoding) || 3000;
+const sRGBEncoding = (typeof window !== "undefined" && window.THREE && window.THREE.sRGBEncoding) || 3001;
+const BasicDepthPacking = (typeof window !== "undefined" && window.THREE && window.THREE.BasicDepthPacking) || 3200;
+const RGBADepthPacking = (typeof window !== "undefined" && window.THREE && window.THREE.RGBADepthPacking) || 3201;
+
+// core mathematical utility helper consumed by animation and scene coordinators across the engine
+class MathHelper {
+  clamp(e, t, i) {
+    return Math.max(t, Math.min(i, e));
+  }
+  saturate(e) {
+    return this.clamp(e, 0, 1);
+  }
+  mix(e, t, i) {
+    return e * (1 - i) + t * i;
+  }
+  fit(e, t, i, n, r, o) {
+    let s = (e - t) / (i - t);
+    return (s = this.saturate(s)), o && (s = o(s)), this.mix(n, r, s);
+  }
+  unClampedFit(e, t, i, n, r, o) {
+    let s = (e - t) / (i - t);
+    return o && (s = o(s)), this.mix(n, r, s);
+  }
+  smoothstep(e, t, i) {
+    let n = this.saturate((i - e) / (t - e));
+    return n * n * (3 - 2 * n);
+  }
+  cubicBezier(e, t, i, n, r) {
+    let o = 1 - r;
+    return (
+      o * o * o * e +
+      3 * o * o * r * t +
+      3 * o * r * r * i +
+      r * r * r * n
+    );
+  }
+  powerTwoCeiling(e) {
+    return Math.pow(2, Math.ceil(Math.log(e) / Math.LN2));
+  }
+  powerTwoCeilingBase(e) {
+    return Math.ceil(Math.log(e) / Math.LN2);
+  }
+}
+const math = new MathHelper();
+if (typeof window !== "undefined") {
+  window.math = math;
+}
 const userAgent = typeof navigator !== "undefined" ? (navigator.userAgent || "").toLowerCase() : "";
 const detectUA = (function() {
   const isMobile = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(userAgent);
@@ -2146,7 +2199,7 @@ class ScreenPaint {
       this._material.uniforms.u_vel.value.set(0, 0);
   };
   update(e) {
-    if (!this.enabled) return;
+    if (!this.enabled || !this._material || !this._currPaintRenderTarget) return;
     this.useNoise !== this._prevUseNoise &&
       ((this._material.defines.USE_NOISE = this.useNoise),
       (this._material.needsUpdate = !0),
@@ -3823,6 +3876,7 @@ class Postprocessing {
     this.useMSAA || this.smaa.updateTextures();
   }
   syncProfile() {
+    if (!this.bloom || !this.final || !this.postProfile) return;
     let e = this.postProfile,
       t = this.smaa,
       i = this.bokeh,
@@ -4861,7 +4915,7 @@ class CameraControls {
       (this._v2 = new Vector3()),
       (this._e = new Euler()),
       (this._camera = properties.camera),
-      this._camera.position.copy(this.DEFAULT_CAMERA_POSITION),
+      this._camera && this._camera.position && this._camera.position.copy(this.DEFAULT_CAMERA_POSITION),
       (this._brownianMotion = new BrownianMotion()),
       this.useOrbitControls === !0 &&
         ((this._orbitCamera = this._camera.clone()),
@@ -4911,9 +4965,9 @@ class CameraControls {
     (this.bokehFocusDistance = _), (this.cameraDistance = _ * 0.5);
   }
   update(e) {
-    let t = this._camera;
-    if (
-      (t.matrix.identity(),
+    let t = this._camera || properties.camera;
+    if (!t) return;
+    t.matrix.identity(),
       t.matrix.decompose(t.position, t.quaternion, t.scale),
       (this.cameraDistance = 1),
       this.scene1.cameraAnimationCount &&
@@ -4921,9 +4975,8 @@ class CameraControls {
         (t.fov += math.fit(properties.startTime, 0.2, 2, 5, 0, ease.cubicOut)),
         t.translateZ(
           math.fit(properties.startTime, 0.2, 2, -200, 0, ease.cubicOut),
-        )),
-      this.scene2AnimationRatio > 0)
-    ) {
+        ));
+    if (this.scene2AnimationRatio > 0) {
       this.cameraDistance = 300;
       const r = 150,
         s =
@@ -5618,7 +5671,7 @@ class Scene1Title {
     u_endRatio2: { value: 0 },
   };
   preInit() {
-    (camera = properties.camera.clone()),
+    (camera = properties.camera ? properties.camera.clone() : new PerspectiveCamera()),
       properties.loader.add(settings.MODEL_PATH + "scene1/TITLE.buf", {
         onLoad: (e) => this._onGeometryLoad("TITLE", e),
       }),
@@ -6710,6 +6763,7 @@ class TextBlurAnimation {
     if (this.prevRatio === e && !t) return;
     this.prevRatio = e;
     const i = this.domElement;
+    if (!i || !i.style) return;
     if (e === 1) {
       (i.style.opacity = 1), (i.style.filter = "none");
       return;
@@ -6751,39 +6805,49 @@ class HomeEverblade extends Section {
   }
   init() {}
   resize(e, t) {
-    this.domDescription.style.removeProperty("opacity"),
-      this.domDescription.style.removeProperty("transform"),
-      this.domTitle.style.removeProperty("transform"),
-      this.domSubtitle.style.removeProperty("transform"),
-      this.domTitleLeft.style.removeProperty("transform"),
-      this.domTitleRight.style.removeProperty("transform"),
-      this.domTitleLeftChild.style.removeProperty("transform"),
-      this.domTitleRightChild.style.removeProperty("transform");
-    const i = this.domSubtitle.getBoundingClientRect();
-    (this.domSubtitle._width = i.width), (this.domSubtitle._height = i.height);
-    const n = this.canvas.getBoundingClientRect();
+    // safely reset transform and opacity properties if elements exist in the dom tree
+    if (this.domDescription?.style) {
+      this.domDescription.style.removeProperty("opacity");
+      this.domDescription.style.removeProperty("transform");
+    }
+    if (this.domTitle?.style) this.domTitle.style.removeProperty("transform");
+    if (this.domSubtitle?.style) this.domSubtitle.style.removeProperty("transform");
+    if (this.domTitleLeft?.style) this.domTitleLeft.style.removeProperty("transform");
+    if (this.domTitleRight?.style) this.domTitleRight.style.removeProperty("transform");
+    if (this.domTitleLeftChild?.style) this.domTitleLeftChild.style.removeProperty("transform");
+    if (this.domTitleRightChild?.style) this.domTitleRightChild.style.removeProperty("transform");
+    const i = this.domSubtitle ? this.domSubtitle.getBoundingClientRect() : { width: 0, height: 0 };
+    if (this.domSubtitle) {
+      (this.domSubtitle._width = i.width), (this.domSubtitle._height = i.height);
+    }
+    const n = this.canvas ? this.canvas.getBoundingClientRect() : { width: 0, height: 0 };
     this.canvasSize.set(n.width, n.height),
-      this.canvasSizeDpr.copy(this.canvasSize).multiplyScalar(settings.DPR),
+      this.canvasSizeDpr.copy(this.canvasSize).multiplyScalar(settings.DPR);
+    if (this.canvas) {
       (this.canvas.width = this.canvasSizeDpr.x),
-      (this.canvas.height = this.canvasSizeDpr.y),
-      (this.domDescription._splitted = new SplitType(this.domDescription, {
+      (this.canvas.height = this.canvasSizeDpr.y);
+    }
+    if (this.domDescription && typeof SplitType !== "undefined") {
+      this.domDescription._splitted = new SplitType(this.domDescription, {
         types: "lines",
-      }));
-    const r = properties.isMobileLayout ? 0.12 : 0.32,
-      o = properties.isMobileLayout ? 0.21 : 0.4,
-      l = (o - r) / this.domDescription._splitted.lines.length,
-      u = properties.isMobileLayout ? 0.75 : 0.82,
-      h = properties.isMobileLayout ? 0.84 : 0.9,
-      c = (h - u) / this.domDescription._splitted.lines.length;
-    this.domDescription._splitted.lines.forEach((m, _) => {
-      (m._animation = new TextBlurAnimation(m)),
-        (m._updateAnimation = (f) => {
-          const p = math.fit(f, r + _ * l, o + _ * l, 0, 1),
-            g = math.fit(f, u + _ * c, h + _ * c, 0, 1);
-          m._animation.update(p * (1 - g));
-        });
-    }),
-      (_needsUpdate = !0);
+      });
+      const r = properties.isMobileLayout ? 0.12 : 0.32,
+        o = properties.isMobileLayout ? 0.21 : 0.4,
+        linesCount = this.domDescription._splitted?.lines?.length || 1,
+        l = (o - r) / linesCount,
+        u = properties.isMobileLayout ? 0.75 : 0.82,
+        h = properties.isMobileLayout ? 0.84 : 0.9,
+        c = (h - u) / linesCount;
+      this.domDescription._splitted?.lines?.forEach((m, _) => {
+        (m._animation = new TextBlurAnimation(m)),
+          (m._updateAnimation = (f) => {
+            const p = math.fit(f, r + _ * l, o + _ * l, 0, 1),
+              g = math.fit(f, u + _ * c, h + _ * c, 0, 1);
+            m._animation && m._animation.update(p * (1 - g));
+          });
+      });
+    }
+    _needsUpdate = true;
   }
   update(e) {
     const t = scrollManager.getDomRange(this.domContainer),
@@ -6791,48 +6855,48 @@ class HomeEverblade extends Section {
       o = math.fit(n, 0, r, 0, 1),
       s = math.fit(n, r - 0.5, r, 0, 1),
       l = o > 0 && o < 1;
-    if (
-      ((this.domContent.style.visibility = l ? "visible" : "hidden"),
-      (this.domContent.style.transform = `translateY(${-i}px)`),
-      this.animationsRatio === o && !_needsUpdate)
-    )
+    if (this.domContent?.style) {
+      this.domContent.style.visibility = l ? "visible" : "hidden";
+      this.domContent.style.transform = `translateY(${-i}px)`;
+    }
+    if (this.animationsRatio === o && !_needsUpdate)
       return;
     this.animationsRatio = o;
     const u = math.fit(o, 0.14, 0.23, 0, 1) * math.fit(o, 0.76, 0.85, 1, 0),
       h = math.fit(o, 0.3, 0.4, 0, 1) * math.fit(o, 0.66, 0.76, 1, 0),
       d = math.fit(o, 0.35, 0.4, 0, 1) * math.fit(o, 0.63, 0.67, 1, 0);
-    if (
-      (this.domSubtitleSpans.forEach((c) => c._animation.update(d)),
-      this.domDescription._splitted.lines.forEach((c) => {
-        c._updateAnimation(o);
-      }),
-      properties.isMobileLayout)
-    ) {
+    this.domSubtitleSpans?.forEach((c) => c._animation?.update(d));
+    this.domDescription?._splitted?.lines?.forEach((c) => {
+      c._updateAnimation && c._updateAnimation(o);
+    });
+    if (properties.isMobileLayout) {
       const c = 0.45 * math.fit(h, 0, 1, 0, this.canvasSize.y);
-      (this.domDescription.style.transform = `translate(0%, ${c}px)`),
-        (this.domTitle.style.transform = `translate(0, -${c}px)`),
-        (this.domTitleLeftChild.style.transform = `translate(0, calc(0.15ex + ${
-          (1 - u + s) * 180
-        }%))`),
-        (this.domTitleRightChild.style.transform = `translate(0, calc(0.15ex + ${
-          (1 - u + s) * 180
-        }%))`);
-    } else
-      (this.domSubtitle.style.transform = `translate(-50%, -50%) translateY(-1em) scale(${
-        0.8 + 0.2 * h
-      })`),
-        (this.domTitleLeft.style.transform = `translate(calc(0.2ex - ${
-          this.domSubtitle._width * 0.8 * h
-        }px), 0ex)`),
-        (this.domTitleRight.style.transform = `translate(calc(-0.1ex + ${
-          this.domSubtitle._width * 0.8 * h
-        }px), 0ex)`),
-        (this.domTitleLeftChild.style.transform = `translate(calc(${
-          (1 - u + s) * 110
-        }%), 0.15ex)`),
-        (this.domTitleRightChild.style.transform = `translate(calc(${
-          -(1 - u + s) * 110
-        }%), 0.15ex)`);
+      if (this.domDescription?.style) this.domDescription.style.transform = `translate(0%, ${c}px)`;
+      if (this.domTitle?.style) this.domTitle.style.transform = `translate(0, -${c}px)`;
+      if (this.domTitleLeftChild?.style) {
+        this.domTitleLeftChild.style.transform = `translate(0, calc(0.15ex + ${(1 - u + s) * 180}%))`;
+      }
+      if (this.domTitleRightChild?.style) {
+        this.domTitleRightChild.style.transform = `translate(0, calc(0.15ex + ${(1 - u + s) * 180}%))`;
+      }
+    } else {
+      const subWidth = this.domSubtitle?._width || 0;
+      if (this.domSubtitle?.style) {
+        this.domSubtitle.style.transform = `translate(-50%, -50%) translateY(-1em) scale(${0.8 + 0.2 * h})`;
+      }
+      if (this.domTitleLeft?.style) {
+        this.domTitleLeft.style.transform = `translate(calc(0.2ex - ${subWidth * 0.8 * h}px), 0ex)`;
+      }
+      if (this.domTitleRight?.style) {
+        this.domTitleRight.style.transform = `translate(calc(-0.1ex + ${subWidth * 0.8 * h}px), 0ex)`;
+      }
+      if (this.domTitleLeftChild?.style) {
+        this.domTitleLeftChild.style.transform = `translate(calc(${(1 - u + s) * 110}%), 0.15ex)`;
+      }
+      if (this.domTitleRightChild?.style) {
+        this.domTitleRightChild.style.transform = `translate(calc(${-(1 - u + s) * 110}%), 0.15ex)`;
+      }
+    }
     this.drawCanvasLogo(o, _needsUpdate),
       (scene1.crackRatio = math.fit(n, 0.5, 2.4, 0, 1)),
       (scene1.trailRatio = math.fit(n, 0.45, 4.5, 0, 1)),
@@ -6913,19 +6977,25 @@ class HomeHero extends Section {
       u = math.fit(n, 1, r, 0, 1),
       d = 1 - math.fit(n, r - 0.5, r, 0, 1),
       c = u < 1;
-    (this.domContent.style.visibility = c ? "visible" : "hidden"),
-      (this.domContent.style.transform = `translateY(${-i}px)`);
+    if (this.domContent?.style) {
+      this.domContent.style.visibility = c ? "visible" : "hidden";
+      this.domContent.style.transform = `translateY(${-i}px)`;
+    }
     let m = math.fit(properties.startTime, 1.75, 2.75, 0, 1, ease.cubicOut);
     const _ = d * m;
-    this.domKicker._animation.update(_),
-      (this.domKicker.style.transform = `translate3d(-50%,${math.mix(
-        -100,
-        0,
-        m,
-      )}%,0)`);
+    if (this.domKicker) {
+      this.domKicker._animation?.update(_);
+      if (this.domKicker.style) {
+        this.domKicker.style.transform = `translate3d(-50%,${math.mix(
+          -100,
+          0,
+          m,
+        )}%,0)`;
+      }
+    }
     const f =
       math.fit(u, 0, 0.25, 1, 0) * math.fit(properties.startTime, 2, 2.5, 0, 1);
-    this.domSubtitleCTA._animation.update(f);
+    this.domSubtitleCTA?._animation?.update(f);
     const p = scrollManager.getDomRange([
       this.domContainer,
       homeEverbladeSection.domContainer,
@@ -6937,13 +7007,15 @@ class HomeHero extends Section {
       this.hasResized)
     ) {
       this.hasResized = !1;
-      const g = _domTitle.getBoundingClientRect();
-      (scene1Title.x =
-        ((g.left + g.width / 2) / properties.viewportWidth) * 2 - 1),
-        (scene1Title.y =
-          1 - ((g.top + g.height / 2) / properties.viewportHeight) * 2),
-        (scene1Title.width = (g.width / properties.viewportWidth) * 2),
-        (scene1Title.height = (g.height / properties.viewportHeight) * 2);
+      if (typeof _domTitle !== "undefined" && _domTitle) {
+        const g = _domTitle.getBoundingClientRect();
+        (scene1Title.x =
+          ((g.left + g.width / 2) / properties.viewportWidth) * 2 - 1),
+          (scene1Title.y =
+            1 - ((g.top + g.height / 2) / properties.viewportHeight) * 2),
+          (scene1Title.width = (g.width / properties.viewportWidth) * 2),
+          (scene1Title.height = (g.height / properties.viewportHeight) * 2);
+      }
     }
   }
 }
@@ -7219,35 +7291,47 @@ class HomePool extends Section {
       { screenY: n, showScreenOffset: r, viewSize: o } = i,
       s = math.fit(r, 0.5, o + 1, 0, 1),
       l = s > 0 && s < 1;
-    (this.domContent.style.transform = `translateY(${-n}px)`),
-      (this.domContent.style.visibility = l ? "visible" : "hidden");
+    if (this.domContent?.style) {
+      this.domContent.style.transform = `translateY(${-n}px)`;
+      this.domContent.style.visibility = l ? "visible" : "hidden";
+    }
     const u = math.fit(s, 0.2, 0.4, 0, 1),
       h = math.fit(s, 0.9, 0.975, 0, 1);
-    (this.domTitle.style.transform = `translate3d(0,${
-      (-h * properties.viewportHeight * 1) / 5
-    }px,${-h * 300}px) rotate3d(-1, 0, 0, ${h * -25}deg)`),
-      (this.domTitle.style.opacity = 1 - h);
-    for (let w = 0; w < this.charArray.length; w++)
-      this.charArray[w]._updateAnimation(u, 0);
+    if (this.domTitle?.style) {
+      this.domTitle.style.transform = `translate3d(0,${
+        (-h * properties.viewportHeight * 1) / 5
+      }px,${-h * 300}px) rotate3d(-1, 0, 0, ${h * -25}deg)`;
+      this.domTitle.style.opacity = 1 - h;
+    }
+    if (this.charArray) {
+      for (let w = 0; w < this.charArray.length; w++)
+        this.charArray[w]._updateAnimation && this.charArray[w]._updateAnimation(u, 0);
+    }
     const d = math.fit(s, 0.35, 0.5, 0, 1);
-    (this.domDescription.style.transform = `translate3d(0,${
-      (-h * properties.viewportHeight * 1) / 5
-    }px,${-h * 300}px) rotate3d(-1, 0, 0, ${h * -25}deg)`),
-      (this.domDescription.style.opacity = 1 - h),
-      this.domDescription._splitted.lines.forEach((w, x) => {
-        w._updateAnimation(d);
+    if (this.domDescription?.style) {
+      this.domDescription.style.transform = `translate3d(0,${
+        (-h * properties.viewportHeight * 1) / 5
+      }px,${-h * 300}px) rotate3d(-1, 0, 0, ${h * -25}deg)`;
+      this.domDescription.style.opacity = 1 - h;
+      this.domDescription._splitted?.lines?.forEach((w, x) => {
+        w._updateAnimation && w._updateAnimation(d);
       });
-    const _ = 1 * math.fit(s, 0.45, 0.6, 0, 1) > 0,
-      f = math.saturate(this.domCta._activeRatio + 4 * e * (_ ? 1 : -2));
-    this.domCta._activeRatio = f;
-    const p = ease.quadIn(f),
-      g = 1 - ease.sineIn(f);
-    (this.domCta.style.transform = `translateY(${
-      (-h * properties.viewportHeight * 1) / 5
-    }px) translate3d(0, ${g * 2}em, ${h * -300}px) rotate3d(-1, 0, 0, ${
-      g * 25 + h * -25
-    }deg)`),
-      (this.domCta.style.opacity = p * (1 - h)),
+    }
+    if (this.domCta) {
+      const _ = 1 * math.fit(s, 0.45, 0.6, 0, 1) > 0,
+        f = math.saturate((this.domCta._activeRatio || 0) + 4 * e * (_ ? 1 : -2));
+      this.domCta._activeRatio = f;
+      const p = ease.quadIn(f),
+        g = 1 - ease.sineIn(f);
+      if (this.domCta.style) {
+        this.domCta.style.transform = `translateY(${
+          (-h * properties.viewportHeight * 1) / 5
+        }px) translate3d(0, ${g * 2}em, ${h * -300}px) rotate3d(-1, 0, 0, ${
+          g * 25 + h * -25
+        }deg)`;
+        this.domCta.style.opacity = p * (1 - h);
+      }
+    }
       (cameraControls.scene3AnimationRatio = math.fit(
         i.ratio,
         -0.75,
@@ -7350,17 +7434,19 @@ class HomeEveryone extends Section {
       u = 1 - math.fit(o, 0.85, 1, 0, 1),
       h = s * u,
       d = h > 0;
-    (this.domContent.style.transform = `translateY(${-i.screenY}px)`),
-      (this.domContent.style.visibility = d ? "visible" : "hidden");
+    if (this.domContent?.style) {
+      this.domContent.style.transform = `translateY(${-i.screenY}px)`;
+      this.domContent.style.visibility = d ? "visible" : "hidden";
+    }
     const c = h * math.fit(o, 0.18, 0.3333, 1, 0),
       m = h * math.fit(o, 0.3333, 0.48, 0, 1) * math.fit(o, 0.51, 0.6666, 1, 0),
       _ = h * math.fit(o, 0.6666, 0.81, 0, 1);
-    if (
-      ((scene2.trails[0].activeRatio = c),
-      (scene2.trails[1].activeRatio = m),
-      (scene2.trails[2].activeRatio = _),
-      this.animationsRatio === o && !t)
-    )
+    if (scene2?.trails) {
+      if (scene2.trails[0]) scene2.trails[0].activeRatio = c;
+      if (scene2.trails[1]) scene2.trails[1].activeRatio = m;
+      if (scene2.trails[2]) scene2.trails[2].activeRatio = _;
+    }
+    if (this.animationsRatio === o && !t)
       return;
     this.animationsRatio = o;
     const f = [
@@ -7370,25 +7456,26 @@ class HomeEveryone extends Section {
       ],
       p = [c, m, _];
     f.forEach((g, w) => {
+      if (!g) return;
       const x = p[w];
-      g.style.visibility = x > 0 ? "visible" : "hidden";
+      if (g.style) g.style.visibility = x > 0 ? "visible" : "hidden";
       const y = math.fit(x, 0.4, 0.7, 0, 1, ease.cubicInOut);
-      g._iconWrapper.style.setProperty("--opacity", y),
-        (g._iconWrapper.style.transform = `rotate(${(1 - y) * -45}deg) scale(${
-          0.5 + 0.5 * y
-        })`);
+      if (g._iconWrapper?.style) {
+        g._iconWrapper.style.setProperty("--opacity", y);
+        g._iconWrapper.style.transform = `rotate(${(1 - y) * -45}deg) scale(${0.5 + 0.5 * y})`;
+      }
       const b = math.fit(x, 0, 0.5, 0, 1);
-      g._titleArray.forEach((L, v) => {
-        L._updateAnimation(b);
+      g._titleArray?.forEach((L, v) => {
+        L._updateAnimation && L._updateAnimation(b);
       });
       const C = math.fit(x, 0.4, 1, 0, 1);
-      g._subtitleSplitted.lines.forEach((L, v) => {
-        L._updateAnimation(C);
+      g._subtitleSplitted?.lines?.forEach((L, v) => {
+        L._updateAnimation && L._updateAnimation(C);
       });
-    }),
-      this.domKicker._splitted.forEach((g, w) => {
-        g._animation.update(math.fit(h, w * 0.05, 0.2 + w * 0.05, 0, 1));
-      });
+    });
+    this.domKicker?._splitted?.forEach((g, w) => {
+      g._animation?.update(math.fit(h, w * 0.05, 0.2 + w * 0.05, 0, 1));
+    });
   }
 }
 const homeEveryoneSection = new HomeEveryone();
@@ -7463,39 +7550,47 @@ class HomeEvernet extends Section {
     const l = math.fit(r, -0.5, o - 0.25, 0, 1);
     math.fit(r, o - 1, o - 0.5, 0, 1);
     const u = l > 0 && l < 1;
-    if (
-      ((this.domContent.style.transform = `translateY(${-n}px)`),
-      (this.domContent.style.visibility = u ? "visible" : "hidden"),
-      this.animationsRatio === l && !t)
-    )
+    if (this.domContent?.style) {
+      this.domContent.style.transform = `translateY(${-n}px)`;
+      this.domContent.style.visibility = u ? "visible" : "hidden";
+    }
+    if (this.animationsRatio === l && !t)
       return;
     this.animationsRatio = l;
     const h = math.fit(l, 0.1, 0.3, 0, 1);
-    (this.domTitle.style.overflow = h < 1 ? "hidden" : "visible"),
-      (this.domTitleSpan.style.transform = `translate(0, calc(${
+    if (this.domTitle?.style) {
+      this.domTitle.style.overflow = h < 1 ? "hidden" : "visible";
+    }
+    if (this.domTitleSpan?.style) {
+      this.domTitleSpan.style.transform = `translate(0, calc(${
         (1 - h) * 175
-      }% + 0.15ex))`);
+      }% + 0.15ex))`;
+    }
     const d = math.fit(l, 0.9, 1, 0, 1);
-    this.domTitleSpan._animation.update(1 - d);
+    this.domTitleSpan?._animation?.update(1 - d);
     const c = math.fit(l, 0.15, 0.3, 0, 1),
       m = math.fit(l, 0.9, 1, 0, 1);
-    this.domSubtitle._animation.update(c * (1 - m)),
-      this.domDescription._splitted.lines.forEach((g) => {
-        g._updateAnimation(l);
-      });
-    const _ = math.fit(l, 0.5, 0.6, 0, this.domLogo._height * 0.55);
-    this.domTitle.style.transform = `translate(0, -${_}px)`;
-    const f = math.fit(l, 0.475, 0.6, 0, this.domLogo._height * 0.55);
-    this.domSubtitle.style.transform = `translate(0, -${f}px)`;
-    const p = math.fit(l, 0.5, 0.6, 0, this.domLogo._height * 0.55);
-    (this.domDescription.style.transform = `translate(0, ${p}px)`),
-      this.drawCanvasLogo(l, t);
+    this.domSubtitle?._animation?.update(c * (1 - m));
+    this.domDescription?._splitted?.lines?.forEach((g) => {
+      g._updateAnimation && g._updateAnimation(l);
+    });
+    const logoHeight = this.domLogo?._height || 0;
+    const _ = math.fit(l, 0.5, 0.6, 0, logoHeight * 0.55);
+    if (this.domTitle?.style) this.domTitle.style.transform = `translate(0, -${_}px)`;
+    const f = math.fit(l, 0.475, 0.6, 0, logoHeight * 0.55);
+    if (this.domSubtitle?.style) this.domSubtitle.style.transform = `translate(0, -${f}px)`;
+    const p = math.fit(l, 0.5, 0.6, 0, logoHeight * 0.55);
+    if (this.domDescription?.style) {
+      this.domDescription.style.transform = `translate(0, ${p}px)`;
+    }
+    this.drawCanvasLogo(l, t);
   }
   drawCanvasLogo(e, t = !1) {
     if (this.canvasAnimationsRatio === e && !t) return;
     this.canvasAnimationsRatio = e;
-    const i = this.ctx,
-      r = this.canvasSize.x,
+    const i = this.ctx;
+    if (!i) return;
+    const r = this.canvasSize.x,
       o = r * 0.5,
       s = r * Math.SQRT2;
     i.save(),
@@ -7535,11 +7630,11 @@ class HomeEvernet extends Section {
       ),
       i.restore(),
       i.restore(),
-      this.domLogo.style.setProperty(
+      this.domLogo?.style?.setProperty(
         "--opacity",
         math.fit(e, 0.65, 0.7, 0, 1) * math.fit(e, 0.8, 0.9, 1, 0),
       ),
-      this.logoImgSize.x > 0 && this.logoImgSize.y > 0)
+      this.logoImgSize?.x > 0 && this.logoImgSize?.y > 0)
     ) {
       const m = this.canvasSize.x / this.canvasSizeReferenceForImageLogo;
       i.save(),
@@ -7562,14 +7657,14 @@ class HomeRelayers extends Section {
     super.preInit(HomeRelayers.id, e),
       (this.domTitleWrapper =
         this.domContainer.querySelector(".title-wrapper")),
-      (this.domTitle = this.domTitleWrapper.querySelector(".title")),
-      (this.domTitle._animation = new TextBlurAnimation(this.domTitle)),
+      (this.domTitle = this.domTitleWrapper ? this.domTitleWrapper.querySelector(".title") : null),
+      (this.domTitle && (this.domTitle._animation = new TextBlurAnimation(this.domTitle))),
       (this.domDescription = this.domContainer.querySelector(".description")),
       (this.domLogo = this.domContainer.querySelector(".logo")),
       (this.canvas = document.getElementById("home-relayers__logo-canvas")),
       (this.canvasSize = new Vector2()),
       (this.canvasSizeDpr = new Vector2()),
-      (this.ctx = this.canvas.getContext("2d")),
+      (this.ctx = this.canvas ? this.canvas.getContext("2d") : null),
       (this.logoImg = new Image()),
       (this.logoImgSize = new Vector2()),
       (this.logoImg.src = "images/logos/relayers.png"),
@@ -7581,47 +7676,58 @@ class HomeRelayers extends Section {
   }
   init() {}
   resize(e, t) {
-    const i = this.canvas.getBoundingClientRect();
+    const i = this.canvas ? this.canvas.getBoundingClientRect() : { width: 0, height: 0 };
     this.canvasSize.set(i.width, i.height),
-      this.canvasSizeDpr.copy(this.canvasSize).multiplyScalar(settings.DPR),
+      this.canvasSizeDpr.copy(this.canvasSize).multiplyScalar(settings.DPR);
+    if (this.canvas) {
       (this.canvas.width = this.canvasSizeDpr.x),
-      (this.canvas.height = this.canvasSizeDpr.y),
-      (this.domDescription._splitted = new SplitType(this.domDescription, {
+      (this.canvas.height = this.canvasSizeDpr.y);
+    }
+    if (this.domDescription && typeof SplitType !== "undefined") {
+      this.domDescription._splitted = new SplitType(this.domDescription, {
         types: "lines",
-      }));
-    const n = 0.5,
-      o = 1 / (1 + (this.domDescription._splitted.lines.length - 1) * (1 - n)),
-      s = o * (1 - n);
-    this.domDescription._splitted.lines.forEach((l, u) => {
-      (l._animation = new TextBlurAnimation(l)),
-        (l._updateAnimation = (h) => {
-          const d = math.fit(h, u * s, u * s + o, 0, 1);
-          l._animation.update(d);
-        });
-    }),
-      this.update(0, !0);
+      });
+      const linesCount = this.domDescription._splitted?.lines?.length || 1;
+      const n = 0.5,
+        o = 1 / (1 + (linesCount - 1) * (1 - n)),
+        s = o * (1 - n);
+      this.domDescription._splitted?.lines?.forEach((l, u) => {
+        (l._animation = new TextBlurAnimation(l)),
+          (l._updateAnimation = (h) => {
+            const d = math.fit(h, u * s, u * s + o, 0, 1);
+            l._animation && l._animation.update(d);
+          });
+      });
+    }
+    this.update(0, !0);
   }
   update(e, t = !1) {
     const i = scrollManager.getDomRange(this.domContainer),
       { screenY: n, showScreenOffset: r, viewSize: o } = i,
       s = math.fit(r, 0.5, o + 0.5, 0, 1),
       l = s > 0 && s < 1;
-    (this.domContent.style.visibility = l ? "visible" : "hidden"),
-      (this.domContent.style.transform = `translateY(${-n}px)`);
+    if (this.domContent?.style) {
+      this.domContent.style.visibility = l ? "visible" : "hidden";
+      this.domContent.style.transform = `translateY(${-n}px)`;
+    }
     const u = properties.viewportHeight * (properties.isMobileLayout, 0.15);
-    this.domLogo.style.transform = `translate(-50%, calc(-50% - ${u}px)) scale(${
-      properties.isMobileLayout ? 0.8 : 1
-    })`;
+    if (this.domLogo?.style) {
+      this.domLogo.style.transform = `translate(-50%, calc(-50% - ${u}px)) scale(${
+        properties.isMobileLayout ? 0.8 : 1
+      })`;
+    }
     const h = math.fit(s, 0.075, 0.125, 0, 1) * math.fit(s, 0.75, 0.95, 1, 0);
-    this.domTitle._animation.update(h),
-      (this.domTitleWrapper.style.transform = `translate(0, ${
+    this.domTitle?._animation?.update(h);
+    if (this.domTitleWrapper?.style) {
+      this.domTitleWrapper.style.transform = `translate(0, ${
         this.canvasSize.y * 0.35
-      }px)`),
-      this.domDescription._splitted.lines.forEach((m, _) => {
-        m._updateAnimation(
-          math.fit(s, 0.12, 0.22, 0, 1) * math.fit(s, 0.655, 0.755, 1, 0),
-        );
-      });
+      }px)`;
+    }
+    this.domDescription?._splitted?.lines?.forEach((m, _) => {
+      m._updateAnimation && m._updateAnimation(
+        math.fit(s, 0.12, 0.22, 0, 1) * math.fit(s, 0.655, 0.755, 1, 0),
+      );
+    });
     const d = math.fit(r, 0.5, 1, 0, 1),
       c = d > 0 && postprocessing$1.final.relayersHideRatio === 0;
     (postprocessing$1.final.relayersHideRatio = d),
@@ -7718,31 +7824,38 @@ class HomeJoin extends Section {
       o = n > 0.95;
     this.mainRatio = math.saturate(this.mainRatio + e * (o ? 1 : -2));
     const s = math.fit(this.mainRatio, 0, 1, 0, 1);
-    (this.domContent.style.transform = `translateY(${-i}px)`),
-      (this.domContent.style.visibility = n > 0 ? "visible" : "hidden");
+    if (this.domContent?.style) {
+      this.domContent.style.transform = `translateY(${-i}px)`;
+      this.domContent.style.visibility = n > 0 ? "visible" : "hidden";
+    }
     const l = math.fit(s, 0.2, 0.6, 0, 1);
-    this.domSubtitle._animation.update(l);
+    this.domSubtitle?._animation?.update(l);
     const u = math.fit(s, 0.3, 0.85, 0, 1);
-    this.domTitleSpans.forEach((c) => {
-      c._updateAnimation(u);
-    }),
-      math.fit(s, 0.7, 1, 0, 1);
+    this.domTitleSpans?.forEach((c) => {
+      c._updateAnimation && c._updateAnimation(u);
+    });
     const h = math.fit(s, 0.6, 0.95, 0, 1);
-    (this.domButtonsWrapper.style.opacity = math.fit(h, 0, 0.5, 0, 1)),
-      (this.domButtonsWrapper.style.transform = `scale(${math.fit(
+    if (this.domButtonsWrapper?.style) {
+      this.domButtonsWrapper.style.opacity = math.fit(h, 0, 0.5, 0, 1);
+      this.domButtonsWrapper.style.transform = `scale(${math.fit(
         h,
         0,
         0.5,
         0.5,
         1,
-      )})`);
+      )})`;
+    }
     const d = math.fit(h, 0.25, 1, 0, 1);
-    this.domButtons.forEach((c, m) => {
+    this.domButtons?.forEach((c, m) => {
       const _ = math.fit(d, m * 0.2, m * 0.2 + 0.6, 0, 1);
-      (c.style.opacity = _),
-        (c.style.transform = `translateY(${(1 - _) * 20}%)`);
-    }),
-      (this.domContainer.style.pointerEvents = s > 0.25 ? "auto" : "none"),
+      if (c?.style) {
+        c.style.opacity = _;
+        c.style.transform = `translateY(${(1 - _) * 20}%)`;
+      }
+    });
+    if (this.domContainer?.style) {
+      this.domContainer.style.pointerEvents = s > 0.25 ? "auto" : "none";
+    }
       (scene3.joinRatio = postprocessing$1.final.joinHideRatio =
         math.fit(n, 0, 0.95, 0, 1));
   }
@@ -7878,8 +7991,11 @@ class Route {
         break;
       }
     }
-    t || console.error("route not found for path: " + this.path),
-      (this.target = t.target);
+    // if route is not matched explicitly (e.g. running under /world in next.js), fallback to first available target
+    if (!t && e && e.length > 0) {
+      t = e[0];
+    }
+    this.target = t ? t.target : null;
   }
 }
 let loc = window.location,
@@ -7912,13 +8028,9 @@ class RouteManager {
     return t.setTarget(this.matchList), t;
   }
   _fetchHtml(e) {
-    let t = this.routes[e];
-    t
-      ? t.dom && this._onDomReady(t)
-      : properties.loader.load("/" + e, {
-          type: "text",
-          onLoad: this._initDom.bind(this, this._createRoute(e)),
-        });
+    let t = this.routes[e] || this._createRoute(e);
+    // in next.js SPA mode the DOM structure is already available under document body
+    this._initDom(t);
   }
   _initDom(e, t) {
     if (!t)
@@ -7934,9 +8046,11 @@ class RouteManager {
     this._onDomReady(e);
   }
   _attachEvents(e) {
+    if (!e || !e.querySelectorAll) return;
     let t = e.querySelectorAll("a");
     for (let i = 0, n = t.length; i < n; i++) {
       let r = t[i];
+      if (!r || !r.href || typeof r.href !== "string") continue;
       if (!r.__hasClickParsed) {
         r.__hasClickParsed = !0;
         let o =
@@ -8075,6 +8189,9 @@ class PageManager {
       let t = this.pageList[e];
       (this.pages[t.id] = t), routeManager.addPath(t.path, t);
     }
+    // ensure next.js /world route or any generic subpath points to homePage
+    routeManager.addPath("world", homePage);
+    routeManager.addPath(/^(world|.*)$/, homePage);
   }
   preInit() {
     (this.domContainer = document.getElementById("pages-container")),
@@ -8085,22 +8202,23 @@ class PageManager {
     return !this._isHiding && this._hasPreloaded && !this._isShowing;
   }
   _onRouteChanged(e) {
+    if (!e) e = routeManager.currRoute || this._defaultRoute;
     if (!this.isIdle) this._pendingRoute = e;
     else if (this.currRoute !== e) {
       (this.prevRoute = this.currRoute), (this.currRoute = e);
-      let t = this.currRoute.target;
+      let t = (this.currRoute && this.currRoute.target) || homePage;
       if (
         (t.domContainer ||
-          ((t.domContainer = this.currRoute.dom),
-          this._log("preInit: " + this.currRoute.path),
+          ((t.domContainer = (this.currRoute && this.currRoute.dom) || document.querySelector(".page")),
+          this._log("preInit: " + (this.currRoute ? this.currRoute.path : "")),
           preUfx.scene.add(t.preUfxContainer),
           postUfx.scene.add(t.postUfxContainer),
           t.preInit(this.currRoute)),
         properties.hasInitialized
           ? (this._hasPreloaded = !1)
           : (this.scrollTargetPage = t),
-        this.currRoute.hasContentPreloaded ||
-          (this._log("preInitContent: " + this.currRoute.path),
+        (this.currRoute && this.currRoute.hasContentPreloaded) ||
+          (this._log("preInitContent: " + (this.currRoute ? this.currRoute.path : "")),
           t.preInitContent(this.currRoute)),
         properties.hasInitialized)
       ) {
@@ -8256,7 +8374,9 @@ class ScrollPane {
     (this.hasResizeObserved = !0), (this.resizeObserveTick = this.tick);
   }
   getDomRange(e, t = 0, i = !1) {
+    if (!e) return { start: 0, end: 0, top: 0, bottom: 0, height: 0, ratio: 0, isVisible: !1, update: () => {} };
     let n = Array.isArray(e);
+    if (n && (!e[0] || !e[1])) return { start: 0, end: 0, top: 0, bottom: 0, height: 0, ratio: 0, isVisible: !1, update: () => {} };
     n
       ? ((e[0].__uuid = e[0].__uuid || uuidHash++),
         (e[1].__uuid = e[1].__uuid || uuidHash++))
@@ -8979,7 +9099,7 @@ class TextureItem extends ImageItem {
         (i.generateMipmaps = !0),
           (i.anisotropy =
             t.anisotropy ||
-            properties.renderer.capabilities.getMaxAnisotropy());
+            (properties.renderer?.capabilities?.getMaxAnisotropy?.() || 1));
         break;
       default:
         i.generateMipmaps = !1;
@@ -9283,11 +9403,12 @@ class App {
   }
   start() {}
   resize(e, t) {
+    if (!properties.isSupported || !properties.renderer) return;
     properties.renderer.setSize(e, t),
-      (properties.canvas.style.width = `${properties.viewportWidth}px`),
-      (properties.canvas.style.height = `${properties.viewportHeight}px`),
-      (properties.camera.aspect = properties.width / properties.height),
-      properties.camera.updateProjectionMatrix(),
+      properties.canvas && (properties.canvas.style.width = `${properties.viewportWidth}px`),
+      properties.canvas && (properties.canvas.style.height = `${properties.viewportHeight}px`),
+      properties.camera && (properties.camera.aspect = properties.width / properties.height),
+      properties.camera && properties.camera.updateProjectionMatrix(),
       postprocessing$1.setSize(properties.width, properties.height),
       screenPaint.resize(properties.width, properties.height),
       visuals.resize(properties.width, properties.height);
@@ -9525,17 +9646,20 @@ class Navbar {
     this.domItems = this.domContainer.querySelectorAll("li");
     for (let e = 0; e < this.domItems.length; e++) {
       let t = this.domItems[e];
-      (t._opacity = 1),
-        t.addEventListener("click", (n) => this._onItemClick(e)),
-        t.addEventListener("mouseenter", (n) => this._onItemMouseEnter(e)),
+      if (!t) continue;
+      (t._opacity = 1);
+      if (t.addEventListener) {
+        t.addEventListener("click", (n) => this._onItemClick(e));
+        t.addEventListener("mouseenter", (n) => this._onItemMouseEnter(e));
         t.addEventListener("mouseleave", (n) => this._onItemMouseLeave(e));
-      const i = t.dataset.section ? t.dataset.section.split("|") : [""];
+      }
+      const i = (t.dataset && t.dataset.section) ? t.dataset.section.split("|") : [""];
       this.sections.push({
         id: i[0],
         secondaryId: i[1],
-        domElement: document.getElementById(i[0]),
+        domElement: i[0] ? document.getElementById(i[0]) : null,
         secondaryDomElement: i[1] ? document.getElementById(i[1]) : null,
-        offset: parseFloat(t.dataset.offset || "0"),
+        offset: parseFloat((t.dataset && t.dataset.offset) || "0"),
       });
     }
   }
@@ -9944,6 +10068,9 @@ function preRun() {
     properties.loader.setCrossOrigin(a, e);
   routeManager.init(),
     properties.loader.register(FontItem),
+    properties.loader.register(BufItem),
+    properties.loader.register(TextureItem),
+    properties.loader.register(ThreeLoaderItem),
     properties.loader.start((a) => {
       a === 1 && run();
     });
