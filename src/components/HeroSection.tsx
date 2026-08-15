@@ -22,20 +22,22 @@ export const HeroSection = () => {
     offset: ["start start", "end start"]
   });
 
-  // parallax calculations - text moves down slowly and fades out
-  // as the user scrolls, so it lingers over the rock sequence
+  // global scroll for the text so it can safely overlap the next section
+  // without its animation getting clipped or reset by the container boundary
+  const { scrollY } = useScroll();
+
+  // parallax calculations for the background
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
   const cloud1X = useTransform(scrollYProgress, [0, 1], ["0%", "-10%"]);
   const cloud1Y = useTransform(scrollYProgress, [0, 1], ["0%", "-5%"]);
   const cloud2X = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
   const cloud2Y = useTransform(scrollYProgress, [0, 1], ["0%", "-15%"]);
-  // text drifts downward by 50% of its own height so it extends
-  // slightly past the hero boundary and overlaps with the rock canvas
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  // fade out early (0.15 to 0.45) while the hero is still mostly on screen.
-  // this prevents the "re-darken" bug where the section's own scroll
-  // movement carries the faded text back up before it fully disappears
-  const textOpacity = useTransform(scrollYProgress, [0.15, 0.45], [1, 0]);
+  
+  // text stays fixed and drifts upwards slightly as you scroll down into the rock.
+  // it fades out based on raw pixel scroll distance (0px to 800px) so it's
+  // completely decoupled from the HeroSection's bounding box.
+  const textY = useTransform(scrollY, [0, 800], [0, -150]);
+  const textOpacity = useTransform(scrollY, [100, 600], [1, 0]);
 
   return (
     <section ref={containerRef} className="relative w-full bg-black" style={{ height: "100vh" }}>
@@ -112,12 +114,11 @@ export const HeroSection = () => {
       {/* nav bar */}
       <NavBar />
 
-      {/* hero text - z-50 so it floats above the rock section's canvas.
-          textY pushes it 120% downward so it bleeds past the hero
-          boundary and overlaps with the rock. textOpacity fades it
-          out gradually so it disappears as the rock takes over. */}
+      {/* hero text - fixed so it floats above everything and stays on screen
+          while the rock scrolls up from underneath it. textOpacity fades it
+          out globally based on pixel scroll distance. */}
       <motion.div
-        className="absolute z-50 w-full pointer-events-none"
+        className="fixed z-50 w-full pointer-events-none"
         style={{
           bottom: 0,
           padding: "0 max(env(safe-area-inset-right, 0px), 5rem) 0.17em max(env(safe-area-inset-left, 0px), 5rem)",
