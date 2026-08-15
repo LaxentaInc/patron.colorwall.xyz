@@ -81,7 +81,7 @@ export function RockSequence() {
   });
 
   return (
-    <section ref={containerRef} className="h-[800vh] bg-neutral-950 relative border-t border-white/5">
+    <section ref={containerRef} className="h-[800vh] bg-black relative">
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
         
         {/* The canvas handles the actual rendering. The rock images are 750x820 */}

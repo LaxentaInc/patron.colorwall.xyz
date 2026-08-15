@@ -1,107 +1,138 @@
-import React from "react";
+"use client";
+
+import React, { useRef } from "react";
 import { NavBar } from "./NavBar";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 // -------------------------------------------------------------------------
 // hero section - the main export.
-// follows patreon's editorial hero pattern:
-//   - full viewport height
-//   - webgl canvas as background (our unique twist vs patreon's photos)
-//   - massive thin text anchored bottom-left with mix-blend-mode: exclusion
-//   - scroll arrow at bottom-left, matching patreon's scroll indicator
-//   - radial gradient overlay for depth and readability
+// features atmospheric fog, parallax scroll effects, and cinematic typography
+// seamlessly blends into the black background of the next section
 // -------------------------------------------------------------------------
 export const HeroSection = () => {
+  const containerRef = useRef<HTMLElement>(null);
+  
+  // Track scroll progress through the hero section to drive parallax effects
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"]
+  });
+
+  // Parallax calculations
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const cloud1X = useTransform(scrollYProgress, [0, 1], ["0%", "-10%"]);
+  const cloud1Y = useTransform(scrollYProgress, [0, 1], ["0%", "-5%"]);
+  const cloud2X = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
+  const cloud2Y = useTransform(scrollYProgress, [0, 1], ["0%", "-15%"]);
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "60%"]);
+  const textOpacity = useTransform(scrollYProgress, [0.3, 0.8], [1, 0]);
+
   return (
-    <section className="relative w-full overflow-hidden" style={{ height: "100vh" }}>
+    <section ref={containerRef} className="relative w-full overflow-hidden bg-black" style={{ height: "100vh" }}>
 
-      {/* video background using the dangerouslySetInnerHTML trick for optimal performance */}
-      <div 
-          className="absolute inset-0 z-0 pointer-events-none bg-black overflow-hidden"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: `
-              <img id="hero-poster" src="/videos/posters/laxenta.webp" alt="Background Poster" fetchpriority="high" class="object-cover absolute inset-0 w-full h-full opacity-100 transition-opacity duration-1000 ease-in-out" />
-              <video id="hero-video" src="/videos/laxenta.webm" autoplay muted loop playsinline preload="none" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-1000 ease-in-out"></video>
-              <script>
-                  (function() {
-                      try {
-                          var video = document.getElementById('hero-video');
-                          var poster = document.getElementById('hero-poster');
-                          
-                          var forcePlay = function() {
-                              var playPromise = video.play();
-                              if (playPromise !== undefined) {
-                                  playPromise.catch(function(e) { console.error('Autoplay blocked:', e); });
-                              }
-                          };
+      {/* Main Background with parallax */}
+      <motion.div 
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{ y: bgY }}
+      >
+        <img 
+          src="/assets/izanami/home_fv_img.webp" 
+          alt="Background" 
+          className="object-cover absolute inset-0 w-full h-full opacity-50" 
+        />
+      </motion.div>
 
-                          video.addEventListener('playing', function() {
-                              video.classList.remove('opacity-0');
-                              video.classList.add('opacity-100');
-                              setTimeout(function() {
-                                  if (poster && poster.parentNode) {
-                                      poster.parentNode.removeChild(poster);
-                                  }
-                              }, 1000);
-                          }, { once: true });
+      {/* Cloud Layer 1 - drifting and parallax */}
+      <motion.div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{ x: cloud1X, y: cloud1Y, opacity: 0.8 }}
+        animate={{ 
+          x: ["-2%", "2%", "-2%"],
+          y: ["-1%", "1%", "-1%"],
+        }}
+        transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
+      >
+        <img 
+          src="/assets/izanami/common_fv_cloud01.webp" 
+          alt="Fog Layer 1" 
+          className="object-cover absolute inset-0 w-full h-full scale-110" 
+        />
+      </motion.div>
 
-                          // Try playing immediately, then on interaction
-                          forcePlay();
-                          window.addEventListener('touchstart', forcePlay, { once: true, passive: true });
-                          window.addEventListener('click', forcePlay, { once: true, passive: true });
-                          window.addEventListener('scroll', forcePlay, { once: true, passive: true });
-                      } catch (e) {
-                          console.error('Video background script error:', e);
-                      }
-                  })();
-              </script>
-          ` }}
-      />
+      {/* Cloud Layer 2 - opposite drifting and parallax */}
+      <motion.div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{ x: cloud2X, y: cloud2Y, opacity: 0.7 }}
+        animate={{ 
+          x: ["2%", "-2%", "2%"],
+          y: ["1%", "-1%", "1%"],
+        }}
+        transition={{ repeat: Infinity, duration: 22, ease: "easeInOut" }}
+      >
+        <img 
+          src="/assets/izanami/common_fv_cloud02.webp" 
+          alt="Fog Layer 2" 
+          className="object-cover absolute inset-0 w-full h-full scale-110" 
+        />
+      </motion.div>
 
-      {/* radial gradient overlay - darkens edges for text readability,
-          same technique patreon uses over their photo backgrounds */}
+      {/* radial gradient overlay to darken edges for cinematic focus */}
       <div
         className="absolute inset-0 z-[1] pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.95) 100%)",
+          background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.95) 100%)",
+        }}
+      />
+
+      {/* bottom fade to perfectly blend into the black rock sequence */}
+      <div
+        className="absolute bottom-0 left-0 w-full h-64 z-[2] pointer-events-none"
+        style={{
+          background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)",
         }}
       />
 
       {/* nav bar */}
       <NavBar />
 
-      {/* hero text - anchored bottom-left, matching patreon's title-wrapper positioning.
-          patreon uses left: calc(5rem + var(--rem-scale-viewport-half-excess)),
-          we simplify to padding-based positioning. */}
-      <div
+      {/* hero text - anchors bottom left and uses parallax */}
+      <motion.div
         className="absolute z-10 w-full"
         style={{
           bottom: 0,
           padding: "0 max(env(safe-area-inset-right, 0px), 5rem) 0.17em max(env(safe-area-inset-left, 0px), 5rem)",
           lineHeight: 0.98,
           pointerEvents: "none",
+          y: textY,
+          opacity: textOpacity
         }}
       >
-        {/* first line - left aligned, with right padding to leave room for
-            the creator card area (patreon puts cards at right side) */}
-        <span className="hero-heading block" style={{ textAlign: "left" }}>
+        <span 
+          className="hero-heading block" 
+          style={{ 
+            textAlign: "left",
+            fontFamily: "var(--font-cinzel), serif",
+            fontWeight: 400
+          }}
+        >
           Fuel the
         </span>
-        {/* second line - right aligned + indented, matching patreon's
-            alternating text alignment pattern */}
         <span
-          className="hero-heading block"
+          className="hero-heading block text-white/90"
           style={{
             textAlign: "right",
             paddingRight: "max(env(safe-area-inset-right, 0px), 5rem)",
             marginBottom: "2rem",
+            fontFamily: "var(--font-playfair), serif",
+            fontStyle: "italic",
+            fontWeight: 400
           }}
         >
           future of desktop
         </span>
-      </div>
+      </motion.div>
 
-      {/* scroll down arrow - bottom left, matching patreon's home-arrow positioning.
-          patreon uses a 7rem svg at left: 5rem, bottom: 5rem */}
+      {/* scroll down arrow */}
       <button
         className="absolute z-20 animate-arrow-bounce"
         style={{
