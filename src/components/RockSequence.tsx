@@ -31,6 +31,9 @@ export function RockSequence() {
     // rotate by 110 degrees as requested
     ctx.rotate((110 * Math.PI) / 180);
     
+    // zoom in the rock by 30% so it fills the canvas better
+    ctx.scale(1.17, 1.17);
+    
     // draw the image centered. the original frames are 750x820
     ctx.drawImage(img, -750 / 2, -820 / 2, 750, 820);
     
@@ -103,7 +106,7 @@ export function RockSequence() {
           ref={canvasRef} 
           width={1000} 
           height={1000} 
-          className="w-full max-w-[800px] object-contain drop-shadow-2xl"
+          className="w-full max-w-[1200px] max-h-screen object-contain drop-shadow-2xl"
         />
 
         {/* Subtle loading indicator if the user scrolls faster than their network */}
