@@ -33,9 +33,8 @@ export function WorldExperience() {
       };
 
       try {
-        // load core vendor bundle first, then custom logic
+        // load the complete unified engine bundle
         await loadScript("/assets/_astro/hoisted.D5QinsOB.js", true);
-        await loadScript("/assets/custom_logic.js", false);
 
         if ((window as any).__bootWorldEngine) {
           (window as any).__bootWorldEngine();
@@ -60,13 +59,105 @@ export function WorldExperience() {
       className="relative w-full min-h-screen bg-black overflow-hidden"
       style={{ zIndex: 10 }}
     >
-      <div id="home" className="relative w-full h-screen">
+      <div id="home" className="page relative w-full h-screen">
         {/* primary webgl canvas consumed by properties.renderer in engine */}
         <canvas
           id="canvas"
           className="w-full h-full block touch-none"
           style={{ width: "100%", height: "100%" }}
         />
+
+        {/* transition overlay canvas */}
+        <canvas id="transition-canvas" style={{ display: "none" }} />
+
+        {/* hidden section structures consumed by scene coordinators */}
+        <div id="home-hero" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div className="subtitle"></div>
+            <div className="kicker"></div>
+            <div className="title"></div>
+          </div>
+        </div>
+
+        <div id="home-everblade" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div className="title">
+              <span><span></span></span>
+              <span><span></span></span>
+            </div>
+            <div className="description"></div>
+            <div className="subtitle"><span></span></div>
+            <div id="home-everblade__logo"></div>
+            <canvas id="home-everblade__logo-canvas" />
+          </div>
+        </div>
+
+        <div id="home-everclear" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div className="subtitle"></div>
+            <div className="kicker"></div>
+            <div className="title"></div>
+          </div>
+        </div>
+
+        <div id="home-pool" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div className="title"><span></span></div>
+            <div className="description"></div>
+            <div id="home-pool__cta"><span></span><svg></svg></div>
+          </div>
+        </div>
+
+        <div id="home-everyone" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div className="kicker"><span></span></div>
+            <div id="home-everyone__lps">
+              <div className="icon-wrapper"></div>
+              <div className="title-wrapper"></div>
+              <div className="title"></div>
+              <div className="subtitle"></div>
+            </div>
+            <div id="home-everyone__borrowers">
+              <div className="icon-wrapper"></div>
+              <div className="title-wrapper"></div>
+              <div className="title"></div>
+              <div className="subtitle"></div>
+            </div>
+            <div id="home-everyone__traders">
+              <div className="icon-wrapper"></div>
+              <div className="title-wrapper"></div>
+              <div className="title"></div>
+              <div className="subtitle"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="home-evernet" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div id="home-evernet__logo"><svg></svg></div>
+            <div className="title-wrapper"><div className="title"><span></span></div></div>
+            <div className="description"></div>
+            <div className="subtitle"></div>
+            <canvas id="home-evernet__logo-canvas" />
+          </div>
+        </div>
+
+        <div id="home-relayers" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div className="title-wrapper"><div className="title"></div></div>
+            <div className="description"></div>
+            <div className="logo"></div>
+            <canvas id="home-relayers__logo-canvas" />
+          </div>
+        </div>
+
+        <div id="home-join" className="section" style={{ display: "none" }}>
+          <div className="section__content">
+            <div className="title"><span></span></div>
+            <div className="subtitle"></div>
+            <div id="home-join__buttons"><a></a></div>
+          </div>
+        </div>
 
         {/* hidden preloader dom nodes required by preloader.preinit */}
         <div id="preloader" style={{ display: "none" }}>

@@ -20061,10 +20061,10 @@ class Browser {
 const browser = new Browser(),
   fromEntries = (a, e) => [...a].reduce((t, [i, n]) => ((t[i] = n), t), {});
 class Settings {
-  MODEL_PATH = "/models/";
-  IMAGE_PATH = "/images/";
-  TEXTURE_PATH = "/textures/";
-  AUDIO_PATH = "/audios/";
+  MODEL_PATH = "/assets/";
+  IMAGE_PATH = "/assets/images/";
+  TEXTURE_PATH = "/assets/textures/";
+  AUDIO_PATH = "/assets/audios/";
   RENDER_TARGET_FLOAT_TYPE = null;
   DATA_FLOAT_TYPE = null;
   USE_FLOAT_PACKING = !1;
@@ -21596,9 +21596,9 @@ class Page {
 }
 class Section {
   preInit(e, t) {
-    (this.domParent = t),
-      (this.domContainer = t.querySelector(`#${e}`)),
-      (this.domContent = this.domContainer.querySelector(".section__content"));
+    this.domParent = t || document.getElementById("home") || document.body;
+    this.domContainer = (this.domParent && this.domParent.querySelector ? this.domParent.querySelector(`#${e}`) : null) || document.getElementById(e) || document.createElement("div");
+    this.domContent = (this.domContainer.querySelector ? this.domContainer.querySelector(".section__content") : null) || document.createElement("div");
   }
   init() {}
   resize(e, t) {}
@@ -27421,7 +27421,7 @@ class HomeEvernet extends Section {
       (this.ctx = this.canvas.getContext("2d")),
       (this.logoImg = new Image()),
       (this.logoImgSize = new Vector2()),
-      (this.logoImg.src = "images/logos/evernet.png"),
+      (this.logoImg.src = "/assets/images/logos/evernet.png"),
       (this.canvasSizeReferenceForImageLogo = 800),
       (this.logoImg.onload = () => {
         this.logoImgSize.set(this.logoImg.width, this.logoImg.height);
@@ -27580,7 +27580,7 @@ class HomeRelayers extends Section {
       (this.ctx = this.canvas.getContext("2d")),
       (this.logoImg = new Image()),
       (this.logoImgSize = new Vector2()),
-      (this.logoImg.src = "images/logos/relayers.png"),
+      (this.logoImg.src = "/assets/images/logos/relayers.png"),
       (this.canvasSizeReferenceForImageLogo = 1e3),
       (this.logoImg.onload = () => {
         this.logoImgSize.set(this.logoImg.width, this.logoImg.height);
@@ -27773,9 +27773,12 @@ class HomePage extends Page {
   isCanvasVisible = !1;
   transitionRatio = 0;
   preInit() {
+    this.domContainer = this.domContainer || document.getElementById("home") || document.getElementById("pages-container") || document.body;
     for (let e of this.sections) e.preInit(this.domContainer);
-    (this.transitionCanvas = document.getElementById("transition-canvas")),
-      (this.transitionCtx = this.transitionCanvas.getContext("2d"));
+    this.transitionCanvas = document.getElementById("transition-canvas") || document.createElement("canvas");
+    if (this.transitionCanvas && this.transitionCanvas.getContext) {
+      this.transitionCtx = this.transitionCanvas.getContext("2d");
+    }
   }
   init() {
     for (let e of this.sections) e.init();
@@ -27929,9 +27932,11 @@ class RouteManager {
         });
   }
   _initDom(e, t) {
-    if (!t)
-      e.setTitleDom(document.title, document.querySelector(".page")),
-        this._attachEvents(document.documentElement);
+    if (!t) {
+      const pageDom = document.querySelector(".page") || document.querySelector("#home") || document.querySelector("#pages-container") || document.body;
+      e.setTitleDom(document.title, pageDom);
+      this._attachEvents(document.documentElement);
+    }
     else {
       let i = document.implementation.createHTMLDocument();
       i.body.innerHTML = /<body[^>]*>((.|[\n\r])*)<\/body>/im.exec(t)[1];
@@ -28800,12 +28805,14 @@ class ScrollManager extends ScrollPane {
     });
   }
   resize(e, t) {
-    super.resize(e, t),
-      (this.domScrollIndicatorHeight =
-        this.domScrollIndicator.getBoundingClientRect().height);
+    super.resize(e, t);
+    if (this.domScrollIndicator) {
+      this.domScrollIndicatorHeight = this.domScrollIndicator.getBoundingClientRect().height;
+    }
   }
   update(e) {
-    super.update(e, this.scrollValue),
+    super.update(e, this.scrollValue);
+    if (this.domScrollIndicator && this.domScrollIndicatorBar) {
       Math.abs(this.scrollViewDelta) > 0
         ? ((this.lastMouseInteractiveTime = properties.time),
           (this.isIndicatorActive = !0))
@@ -28817,16 +28824,17 @@ class ScrollManager extends ScrollPane {
         1,
       )),
       (this.domScrollIndicator.style.opacity = this.scrollIndicatorActiveRatio);
-    let i = 1,
-      n = 0;
-    this.contentSize > 0 &&
-      ((i = Math.max(this.MIN_BAR_SCALE_Y, 1 / (1 + this.contentSize))),
-      (n = (this.scrollView / this.contentSize) * (1 - i))),
+      let i = 1,
+        n = 0;
+      this.contentSize > 0 &&
+        ((i = Math.max(this.MIN_BAR_SCALE_Y, 1 / (1 + this.contentSize))),
+        (n = (this.scrollView / this.contentSize) * (1 - i))),
       (this.domScrollIndicatorBar.style.height =
         this.domScrollIndicatorHeight * i + "px"),
       (this.domScrollIndicatorBar.style.transform =
-        "translate3d(0," + this.domScrollIndicatorHeight * n + "px,0)"),
-      this.frameIdx++;
+        "translate3d(0," + this.domScrollIndicatorHeight * n + "px,0)");
+    }
+    this.frameIdx++;
   }
   get isMoveable() {
     return (
@@ -29329,15 +29337,15 @@ class Preloader {
   ctx;
   _tmpCamera = new Camera();
   preInit() {
-    (this.domContainer = document.getElementById("preloader")),
-      (this.domCanvas = document.getElementById("preloader-canvas")),
-      (this.domPercent = document.getElementById("preloader-percent")),
-      (this.ctx = this.domCanvas.getContext("2d")),
-      (this.isActive = !0),
-      (this.domLogoContainer = document.getElementById("preloader-logo")),
-      (this.domLogo = this.domLogoContainer.querySelector("svg")),
-      (this.domLogoPaths = Array.from(this.domLogo.querySelectorAll("path"))),
-      (this.domLogoLines = Array.from(this.domLogo.querySelectorAll("rect")));
+    this.domContainer = document.getElementById("preloader");
+    this.domCanvas = document.getElementById("preloader-canvas");
+    this.domPercent = document.getElementById("preloader-percent");
+    if (this.domCanvas && this.domCanvas.getContext) this.ctx = this.domCanvas.getContext("2d");
+    this.isActive = !1;
+    this.domLogoContainer = document.getElementById("preloader-logo");
+    this.domLogo = this.domLogoContainer ? this.domLogoContainer.querySelector("svg") : null;
+    this.domLogoPaths = Array.from(this.domLogo ? this.domLogo.querySelectorAll("path") : []);
+    this.domLogoLines = Array.from(this.domLogo ? this.domLogo.querySelectorAll("rect") : []);
   }
   show(e, t) {
     (this._initCallback = e),
@@ -29349,7 +29357,7 @@ class Preloader {
   }
   hide() {
     settings.SKIP_ANIMATION &&
-      ((this.isActive = !1), (this.domContainer.style.display = "none"));
+      ((this.isActive = !1), (this.domContainer && (this.domContainer.style.display = "none")));
   }
   resize(e, t) {
     this.isActive &&
@@ -29476,19 +29484,19 @@ class Preloader {
       n.closePath(),
       n.stroke(),
       n.restore(),
-      (this.domPercent.textContent = Math.round(t * 100) + "%"),
-      (this.domPercent.style.opacity = math.fit(i, 0, 0.25, 1, 0)),
-      (this.domPercent.style.transform =
+      this.domPercent && (this.domPercent.textContent = Math.round(t * 100) + "%"),
+      this.domPercent && (this.domPercent.style.opacity = math.fit(i, 0, 0.25, 1, 0)),
+      this.domPercent && (this.domPercent.style.transform =
         "translate3d(-50%," + (math.fit(i, 0, 0.25, 0, 1) + "em") + ",0)"),
-      (this.domLogoContainer.style.transform = `translate(-50%, -50%) scale(${math.fit(
+      this.domLogoContainer && (this.domLogoContainer.style.transform = `translate(-50%, -50%) scale(${math.fit(
         t,
         0.25,
         1,
         0.45,
         0.75,
       )})`),
-      (this.domLogoContainer.style.opacity = math.fit(i, 0, 1, 1, 0));
-    const p = this.domLogoPaths.length;
+      this.domLogoContainer && (this.domLogoContainer.style.opacity = math.fit(i, 0, 1, 1, 0));
+    const p = this.domLogoPaths ? this.domLogoPaths.length : 0;
     let g = 0,
       w = 0.05,
       x = 0.5;
@@ -29496,18 +29504,18 @@ class Preloader {
       const C = g + w * b,
         L = C + x,
         v = math.fit(t, C, L, 0, 1);
-      this.domLogoPaths[b].style.opacity = v;
+      this.domLogoPaths[b] && (this.domLogoPaths[b].style.opacity = v);
     }
-    const y = this.domLogoLines.length;
+    const y = this.domLogoLines ? this.domLogoLines.length : 0;
     (g = 0.25), (w = 0.05), (x = 0.5);
     for (let b = 0; b < y; b++) {
       const C = g + w * b,
         L = C + x,
         v = math.fit(t, C, L, 0, 1);
-      this.domLogoLines[b].style.opacity = v;
+      this.domLogoLines[b] && (this.domLogoLines[b].style.opacity = v);
     }
     i == 1 &&
-      ((this.isActive = !1), (this.domContainer.style.display = "none"));
+      ((this.isActive = !1), this.domContainer && (this.domContainer.style.display = "none"));
   }
 }
 const preloader = new Preloader();
@@ -29521,22 +29529,26 @@ class Navbar {
   hoverIndex = -1;
   sections = [];
   preInit() {
-    (this.domContainer = document.getElementById("navbar")),
-      (this.domWrapper = this.domContainer.querySelector("ul")),
-      (this.domItems = this.domContainer.querySelectorAll("li"));
+    this.domContainer = document.getElementById("navbar");
+    if (!this.domContainer) {
+      this.domItems = [];
+      return;
+    }
+    this.domWrapper = this.domContainer.querySelector("ul");
+    this.domItems = this.domContainer.querySelectorAll("li");
     for (let e = 0; e < this.domItems.length; e++) {
       let t = this.domItems[e];
       (t._opacity = 1),
         t.addEventListener("click", (n) => this._onItemClick(e)),
         t.addEventListener("mouseenter", (n) => this._onItemMouseEnter(e)),
         t.addEventListener("mouseleave", (n) => this._onItemMouseLeave(e));
-      const i = t.dataset.section.split("|");
+      const i = t.dataset.section ? t.dataset.section.split("|") : [""];
       this.sections.push({
         id: i[0],
         secondaryId: i[1],
         domElement: document.getElementById(i[0]),
         secondaryDomElement: i[1] ? document.getElementById(i[1]) : null,
-        offset: parseFloat(t.dataset.offset),
+        offset: parseFloat(t.dataset.offset || "0"),
       });
     }
   }
@@ -29553,9 +29565,10 @@ class Navbar {
   }
   _updateActiveItem(e) {
     this.activeItemIndex = e;
+    if (!this.domItems || !this.domItems.length) return;
     for (let t = 0; t < this.domItems.length; t++)
-      this.domItems[t].classList.remove("is-active");
-    this.domItems[e].classList.add("is-active");
+      this.domItems[t] && this.domItems[t].classList.remove("is-active");
+    this.domItems[e] && this.domItems[e].classList.add("is-active");
   }
   show() {
     this.isActive = !0;
@@ -29565,6 +29578,7 @@ class Navbar {
   }
   resize(e, t) {}
   update(e) {
+    if (!this.domContainer || !this.domItems || !this.domItems.length) return;
     let t = 0;
     for (let r = 0; r < this.sections.length; r++) {
       const o = this.sections[r].domElement,
@@ -29625,31 +29639,37 @@ class Header {
   domCTA;
   isDarkTheme = !1;
   preInit() {
-    (this.domContainer = document.getElementById("site-header")),
-      (this.domLogo = this.domContainer.querySelector("#site-header__logo")),
-      (this.donLogoAnchor = this.domLogo.querySelector("a")),
-      (this.domMobileLogo = this.domContainer.querySelector(
-        "#site-header__mobile-logo",
-      )),
-      (this.domMobileLogoAnchor = this.domMobileLogo.querySelector("a")),
-      (this.domCTA = this.domContainer.querySelector("#site-header__cta")),
-      (this.domMobileCTA = this.domContainer.querySelector(
-        "#site-header__mobile-cta",
-      )),
-      (this.domMobileWrapper = this.domContainer.querySelector(
-        "#site-header__mobile",
-      )),
+    this.domContainer = document.getElementById("site-header");
+    if (!this.domContainer) return;
+    this.domLogo = this.domContainer.querySelector("#site-header__logo");
+    this.donLogoAnchor = this.domLogo ? this.domLogo.querySelector("a") : null;
+    this.domMobileLogo = this.domContainer.querySelector(
+      "#site-header__mobile-logo",
+    );
+    this.domMobileLogoAnchor = this.domMobileLogo ? this.domMobileLogo.querySelector("a") : null;
+    this.domCTA = this.domContainer.querySelector("#site-header__cta");
+    this.domMobileCTA = this.domContainer.querySelector(
+      "#site-header__mobile-cta",
+    );
+    this.domMobileWrapper = this.domContainer.querySelector(
+      "#site-header__mobile",
+    );
+    if (this.donLogoAnchor) {
       this.donLogoAnchor.addEventListener("click", () => {
-        scrollManager.scrollTo(homeHero.domContainer);
-      }),
-      this.domMobileLogoAnchor.addEventListener("click", () => {
-        scrollManager.scrollTo(homeHero.domContainer);
+        typeof homeHero !== "undefined" && homeHero && homeHero.domContainer && scrollManager.scrollTo(homeHero.domContainer);
       });
+    }
+    if (this.domMobileLogoAnchor) {
+      this.domMobileLogoAnchor.addEventListener("click", () => {
+        typeof homeHero !== "undefined" && homeHero && homeHero.domContainer && scrollManager.scrollTo(homeHero.domContainer);
+      });
+    }
   }
   show() {}
   hide() {}
   resize(e, t) {}
   update(e) {
+    if (!this.domContainer || !this.domLogo) return;
     const t = math.fit(properties.startTime, 2, 3, 0, 1, ease.cubicOut),
       i = math.fit(properties.startTime, 3, 4, 0, 1, ease.cubicOut),
       n = math.mix(-100, 0, t);
@@ -29679,9 +29699,9 @@ class UI {
       settings.HIDE_UI)
     ) {
       let e = document.getElementById("ui");
-      e.classList.add("is-hidden"),
+      e && (e.classList.add("is-hidden"),
         (e.style.opacity = 0),
-        (e.style.visibility = "hidden");
+        (e.style.visibility = "hidden"));
     }
   }
   preload(e, t) {
@@ -30036,17 +30056,12 @@ function loop(a) {
     update(t),
     (_needsResize = !1);
 }
-preRun();
-document.documentElement.classList.remove("no-js");
-/(ipad|iphone|android)/i.test(
-  (navigator.userAgent || navigator.vendor).toLowerCase(),
-)
-  ? document.documentElement.classList.add("is-mobile")
-  : document.documentElement.classList.add("is-desktop");
+window.__bootWorldEngine = function() {
+  if (window.__worldEngineActive) return;
+  window.__worldEngineActive = true;
+  document.documentElement.classList.remove("no-js");
+  preRun();
+};
 function preventZoom(a) {
   a.preventDefault(), (document.body.style.zoom = 1);
 }
-window.addEventListener("wheel", (a) => a.preventDefault(), { passive: !1 });
-document.addEventListener("gesturestart", (a) => preventZoom(a));
-document.addEventListener("gesturechange", (a) => preventZoom(a));
-document.addEventListener("gestureend", (a) => preventZoom(a));
