@@ -8,28 +8,23 @@ import * as THREE from "three";
 function DustParticles({ count = 2500 }) {
   const pointsRef = useRef<THREE.Points>(null);
 
-  // generate star positions in a distant background shell (r = 25..60)
-  // this prevents any particles from getting close to the camera at z=5
+  // generate stars strictly in the background volume behind the scene
+  // this guarantees they are clearly visible while preventing foreground orbs
   const positions = useMemo(() => {
     const p = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      // minimum distance of 25 ensures particles stay far away like stars
-      const r = 25 + 35 * Math.cbrt(Math.random());
-      const theta = Math.random() * 2 * Math.PI;
-      const phi = Math.acos(2 * Math.random() - 1);
-      
-      p[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      p[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      p[i * 3 + 2] = r * Math.cos(phi);
+      p[i * 3] = (Math.random() - 0.5) * 60;     // x spread: -30 to 30
+      p[i * 3 + 1] = (Math.random() - 0.5) * 50; // y spread: -25 to 25
+      p[i * 3 + 2] = -5 - Math.random() * 25;    // z depth: -5 to -30 (strictly behind camera)
     }
     return p;
   }, [count]);
 
-  // slowly rotate the distant star field for subtle ambient drift
+  // subtle ambient drift for the starfield
   useFrame((state, delta) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.x -= delta / 30;
-      pointsRef.current.rotation.y -= delta / 45;
+      pointsRef.current.rotation.z += delta / 60;
+      pointsRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.05;
     }
   });
 
@@ -38,10 +33,10 @@ function DustParticles({ count = 2500 }) {
       <PointMaterial
         transparent
         color="#ffffff"
-        size={0.02}
+        size={0.06}
         sizeAttenuation={true}
         depthWrite={false}
-        opacity={0.6}
+        opacity={0.85}
       />
     </Points>
   );
