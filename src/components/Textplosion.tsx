@@ -17,6 +17,7 @@ export interface UpInSmokeProps {
   backgroundColor?: number | string;
   className?: string;
   style?: React.CSSProperties;
+  align?: 'left' | 'center' | 'right';
 }
 
 const EASE_OUT_CUBIC = /* glsl */ `
@@ -52,6 +53,7 @@ const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textp
   backgroundColor = 0x000000,
   className,
   style,
+  align = 'center',
 }, ref) {
   const containerRef = useRef<HTMLDivElement>(null);
   // stores the current explosion progress (0 = exploded, 1 = assembled).
@@ -62,6 +64,7 @@ const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textp
   const animDurRef = useRef(7);
   // ref to the three.js uTime uniform so the tick loop can write to it
   const uTimeRef = useRef({ value: 0 });
+  const textWidthRef = useRef(0);
 
   useImperativeHandle(ref, () => ({
     setProgress: (p: number) => {
@@ -102,15 +105,38 @@ const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textp
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
+
+      if (mesh && textWidthRef.current > 0) {
+        const vFov = (camera.fov * Math.PI) / 180;
+        const vHeight = 2 * Math.tan(vFov / 2) * camera.position.z;
+        const vWidth = vHeight * camera.aspect;
+
+        const w = textWidthRef.current;
+        let scale = 1;
+        
+        // Prevent clipping: if text is wider than 90% of the canvas, scale it down
+        if (w > vWidth * 0.9) {
+          scale = (vWidth * 0.9) / w;
+        }
+        mesh.scale.setScalar(scale);
+
+        // Position based on alignment
+        const scaledWidth = w * scale;
+        if (align === 'left') {
+          mesh.position.x = -vWidth / 2 + scaledWidth / 2;
+        } else if (align === 'right') {
+          mesh.position.x = vWidth / 2 - scaledWidth / 2;
+        } else {
+          mesh.position.x = 0;
+        }
+      }
     }
     resize();
     window.addEventListener('resize', resize);
 
     function tick() {
-      // drive the shader uniform from the externally-controlled progress ref.
-      // progress 0 = fully exploded (uTime at max), progress 1 = assembled (uTime at 0).
-      // invert so scrolling down assembles, scrolling further disperses.
-      uTime.value = animDurRef.current * (1 - progressRef.current);
+      // progress 0 = assembled (uTime at 0), progress 1 = fully exploded (uTime at max).
+      uTime.value = animDurRef.current * progressRef.current;
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     }
@@ -137,9 +163,12 @@ const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textp
         const w = bbox.max.x - bbox.min.x;
         const h = bbox.max.y - bbox.min.y;
         const d = bbox.max.z - bbox.min.z;
-        // anchor {x:0.5, y:0, z:0.5} -> centered horizontally, bottom-anchored vertically
-        // (matches the original's literal -size*anchor translation, no bbox.min correction)
-        textGeo.translate(-w * 0.5, -h * 0.0, -d * 0.5);
+        
+        textWidthRef.current = w;
+
+        // always center the geometry locally so the explosion math radiates outwards cleanly.
+        // the alignment positioning is handled dynamically in resize() using mesh.position.x
+        textGeo.translate(-w * 0.5, -h * 0.5, -d * 0.5);
 
         const posAttr = textGeo.getAttribute('position') as THREE.BufferAttribute;
         const faceCount = posAttr.count / 3;
@@ -250,7 +279,7 @@ const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textp
               vec3 tPosition = transformed - aCentroid;
               tPosition *= 1.0 - tProgress;
               tPosition += aCentroid;
-              tPosition += cubicBezier(tPosition, aControl0, aControl1, aEndPosition, tProgress);
+              tPosition = cubicBezier(tPosition, aControl0, aControl1, aEndPosition, tProgress);
               transformed = tPosition;
               `
             );
@@ -259,9 +288,13 @@ const Textplosion = forwardRef<TextplosionHandle, UpInSmokeProps>(function Textp
         };
 
         mesh = new THREE.Mesh(textGeo, material);
-        mesh.position.y = -40;
+        // vertical center is usually good, but we can bump it down a bit to match the original feel
+        mesh.position.y = -20;
         mesh.frustumCulled = false;
         scene.add(mesh);
+        
+        // call resize once to snap the mesh to the correct aligned position and scale immediately
+        resize();
 
         // store the computed animation duration so the tick loop can scale progress
         animDurRef.current = maxDelayX + maxDelayY + maxDuration - 3;

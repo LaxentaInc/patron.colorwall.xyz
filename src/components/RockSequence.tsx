@@ -97,21 +97,21 @@ export function RockSequence() {
   });
 
   // text phase 1 - early scroll
-  const opacity1 = useTransform(scrollYProgress, [0.05, 0.15, 0.25, 0.35], [0, 1, 1, 0]);
-  const y1 = useTransform(scrollYProgress, [0.05, 0.35], [50, -50]);
-  // explosion progress: 0 = smoke, 1 = assembled.
-  // scroll down: text assembles from smoke (0->1), then disperses (1->0)
-  const explode1 = useTransform(scrollYProgress, [0.05, 0.15, 0.25, 0.35], [0, 1, 1, 0]);
+  const opacity1 = useTransform(scrollYProgress, [0.00, 0.10, 0.20, 0.28], [0, 1, 1, 0]);
+  const y1 = useTransform(scrollYProgress, [0.00, 0.28], [50, -50]);
+  // explosion progress: 1 = smoke, 0 = solid.
+  // scroll down: text assembles slowly from smoke (1->0), then disperses (0->1)
+  const explode1 = useTransform(scrollYProgress, [0.00, 0.10, 0.20, 0.28], [1, 0, 0, 1]);
 
   // text phase 2 - mid scroll
-  const opacity2 = useTransform(scrollYProgress, [0.38, 0.48, 0.58, 0.68], [0, 1, 1, 0]);
-  const y2 = useTransform(scrollYProgress, [0.38, 0.68], [50, -50]);
-  const explode2 = useTransform(scrollYProgress, [0.38, 0.48, 0.58, 0.68], [0, 1, 1, 0]);
+  const opacity2 = useTransform(scrollYProgress, [0.32, 0.42, 0.52, 0.60], [0, 1, 1, 0]);
+  const y2 = useTransform(scrollYProgress, [0.32, 0.60], [50, -50]);
+  const explode2 = useTransform(scrollYProgress, [0.32, 0.42, 0.52, 0.60], [1, 0, 0, 1]);
 
   // text phase 3 - late scroll
-  const opacity3 = useTransform(scrollYProgress, [0.72, 0.82, 0.92, 1.0], [0, 1, 1, 0]);
-  const y3 = useTransform(scrollYProgress, [0.72, 1.0], [50, -50]);
-  const explode3 = useTransform(scrollYProgress, [0.72, 0.82, 0.92, 1.0], [0, 1, 1, 0]);
+  const opacity3 = useTransform(scrollYProgress, [0.64, 0.74, 0.84, 1.00], [0, 1, 1, 0]);
+  const y3 = useTransform(scrollYProgress, [0.64, 1.00], [50, -50]);
+  const explode3 = useTransform(scrollYProgress, [0.64, 0.74, 0.84, 1.00], [1, 0, 0, 1]);
 
   // wire the explosion progress to each textplosion ref imperatively.
   // this avoids re-rendering the component on every scroll tick.
@@ -185,8 +185,8 @@ export function RockSequence() {
             className="absolute max-w-xl text-left"
             style={{ opacity: opacity1, y: y1, overflow: 'visible' }}
           >
-            <div className="w-[600px] h-[200px] md:-ml-8 pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text1Ref} text="BEYOND THE DESKTOP" size={56} />
+            <div className="w-full h-[250px] pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text1Ref} text="BEYOND THE DESKTOP" size={40} align="left" />
             </div>
             <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
               Colorwall isn't just software. It's a living, breathing canvas that redefines your digital environment. Become a Patron and help us build the ultimate Wallpaper Engine alternative.
@@ -198,8 +198,8 @@ export function RockSequence() {
             className="absolute max-w-xl text-left"
             style={{ opacity: opacity2, y: y2, overflow: 'visible' }}
           >
-            <div className="w-[600px] h-[200px] md:-ml-8 pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text2Ref} text="SHAPE THE FOUNDATION" size={56} />
+            <div className="w-full h-[250px] pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text2Ref} text="SHAPE THE FOUNDATION" size={40} align="left" />
             </div>
             <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
               By backing us early, you get exclusive access to beta builds, cutting-edge renderer features, and a direct line to the development team.
@@ -211,8 +211,8 @@ export function RockSequence() {
             className="absolute max-w-xl text-left"
             style={{ opacity: opacity3, y: y3, overflow: 'visible' }}
           >
-            <div className="w-[600px] h-[200px] md:-ml-8 pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text3Ref} text="BECOME PART OF THE CORE" size={56} />
+            <div className="w-full h-[250px] pointer-events-auto" style={{ overflow: 'visible' }}>
+              <Textplosion ref={text3Ref} text="BECOME PART OF THE CORE" size={40} align="left" />
             </div>
             <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed">
               Secure your place among our earliest supporters. Unlock exclusive perks, early access drops, and have direct influence over the roadmap.
