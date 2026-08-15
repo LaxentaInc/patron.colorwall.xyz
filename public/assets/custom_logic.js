@@ -1,3 +1,31 @@
+const userAgent = typeof navigator !== "undefined" ? (navigator.userAgent || "").toLowerCase() : "";
+const detectUA = (function() {
+  const isMobile = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(userAgent);
+  const isTablet = /ipad|tablet|(android(?!.*mobile))/i.test(userAgent);
+  const isiOS = /iphone|ipad|ipod/i.test(userAgent);
+  const isAndroid = /android/i.test(userAgent);
+  const isMacOS = /macintosh|mac os x/i.test(userAgent);
+  const isWindows = { version: /windows nt/i.test(userAgent) ? "10" : null };
+  return {
+    isMobile,
+    isTablet,
+    isDesktop: !isMobile && !isTablet,
+    isiOS,
+    isAndroid,
+    isMacOS,
+    isWindows
+  };
+})();
+const browserName = (function() {
+  if (userAgent.indexOf("edg") !== -1) return "Microsoft Edge";
+  if (userAgent.indexOf("opr") !== -1 || userAgent.indexOf("opera") !== -1) return "Opera";
+  if (userAgent.indexOf("chrome") !== -1) return "Chrome";
+  if (userAgent.indexOf("safari") !== -1) return "Safari";
+  if (userAgent.indexOf("firefox") !== -1) return "Firefox";
+  if (userAgent.indexOf("trident") !== -1 || userAgent.indexOf("msie") !== -1) return "Internet Explorer";
+  return "Chrome";
+})();
+
 class Browser {
   isMobile = detectUA.isMobile || detectUA.isTablet;
   isDesktop = detectUA.isDesktop;
@@ -15,20 +43,20 @@ class Browser {
   isOpera = browserName === "Opera";
   isSafari = browserName === "Safari";
   isSupportMSAA = !userAgent.match("version/15.4 ");
-  isRetina = window.devicePixelRatio && window.devicePixelRatio >= 1.5;
-  devicePixelRatio = window.devicePixelRatio || 1;
-  cpuCoreCount = navigator.hardwareConcurrency || 1;
-  baseUrl = document.location.origin;
-  isIFrame = window.self !== window.top;
+  isRetina = typeof window !== "undefined" && window.devicePixelRatio && window.devicePixelRatio >= 1.5;
+  devicePixelRatio = typeof window !== "undefined" ? (window.devicePixelRatio || 1) : 1;
+  cpuCoreCount = typeof navigator !== "undefined" ? (navigator.hardwareConcurrency || 1) : 1;
+  baseUrl = typeof document !== "undefined" ? document.location.origin : "";
+  isIFrame = typeof window !== "undefined" ? (window.self !== window.top) : false;
   constructor() {}
 }
 const browser = new Browser(),
   fromEntries = (a, e) => [...a].reduce((t, [i, n]) => ((t[i] = n), t), {});
 class Settings {
-  MODEL_PATH = "/models/";
-  IMAGE_PATH = "/images/";
-  TEXTURE_PATH = "/textures/";
-  AUDIO_PATH = "/audios/";
+  MODEL_PATH = "/assets/";
+  IMAGE_PATH = "/assets/images/";
+  TEXTURE_PATH = "/assets/textures/";
+  AUDIO_PATH = "/assets/audios/";
   RENDER_TARGET_FLOAT_TYPE = null;
   DATA_FLOAT_TYPE = null;
   USE_FLOAT_PACKING = !1;
@@ -8764,12 +8792,14 @@ class ScrollManager extends ScrollPane {
     });
   }
   resize(e, t) {
-    super.resize(e, t),
-      (this.domScrollIndicatorHeight =
-        this.domScrollIndicator.getBoundingClientRect().height);
+    super.resize(e, t);
+    if (this.domScrollIndicator) {
+      this.domScrollIndicatorHeight = this.domScrollIndicator.getBoundingClientRect().height;
+    }
   }
   update(e) {
-    super.update(e, this.scrollValue),
+    super.update(e, this.scrollValue);
+    if (this.domScrollIndicator && this.domScrollIndicatorBar) {
       Math.abs(this.scrollViewDelta) > 0
         ? ((this.lastMouseInteractiveTime = properties.time),
           (this.isIndicatorActive = !0))
@@ -8781,16 +8811,17 @@ class ScrollManager extends ScrollPane {
         1,
       )),
       (this.domScrollIndicator.style.opacity = this.scrollIndicatorActiveRatio);
-    let i = 1,
-      n = 0;
-    this.contentSize > 0 &&
-      ((i = Math.max(this.MIN_BAR_SCALE_Y, 1 / (1 + this.contentSize))),
-      (n = (this.scrollView / this.contentSize) * (1 - i))),
+      let i = 1,
+        n = 0;
+      this.contentSize > 0 &&
+        ((i = Math.max(this.MIN_BAR_SCALE_Y, 1 / (1 + this.contentSize))),
+        (n = (this.scrollView / this.contentSize) * (1 - i))),
       (this.domScrollIndicatorBar.style.height =
         this.domScrollIndicatorHeight * i + "px"),
       (this.domScrollIndicatorBar.style.transform =
-        "translate3d(0," + this.domScrollIndicatorHeight * n + "px,0)"),
-      this.frameIdx++;
+        "translate3d(0," + this.domScrollIndicatorHeight * n + "px,0)");
+    }
+    this.frameIdx++;
   }
   get isMoveable() {
     return (
@@ -9293,15 +9324,15 @@ class Preloader {
   ctx;
   _tmpCamera = new Camera();
   preInit() {
-    (this.domContainer = document.getElementById("preloader")),
-      (this.domCanvas = document.getElementById("preloader-canvas")),
-      (this.domPercent = document.getElementById("preloader-percent")),
-      (this.ctx = this.domCanvas.getContext("2d")),
-      (this.isActive = !0),
-      (this.domLogoContainer = document.getElementById("preloader-logo")),
-      (this.domLogo = this.domLogoContainer.querySelector("svg")),
-      (this.domLogoPaths = Array.from(this.domLogo.querySelectorAll("path"))),
-      (this.domLogoLines = Array.from(this.domLogo.querySelectorAll("rect")));
+    this.domContainer = document.getElementById("preloader");
+    this.domCanvas = document.getElementById("preloader-canvas");
+    this.domPercent = document.getElementById("preloader-percent");
+    if (this.domCanvas && this.domCanvas.getContext) this.ctx = this.domCanvas.getContext("2d");
+    this.isActive = !1;
+    this.domLogoContainer = document.getElementById("preloader-logo");
+    this.domLogo = this.domLogoContainer ? this.domLogoContainer.querySelector("svg") : null;
+    this.domLogoPaths = Array.from(this.domLogo ? this.domLogo.querySelectorAll("path") : []);
+    this.domLogoLines = Array.from(this.domLogo ? this.domLogo.querySelectorAll("rect") : []);
   }
   show(e, t) {
     (this._initCallback = e),
@@ -9485,22 +9516,26 @@ class Navbar {
   hoverIndex = -1;
   sections = [];
   preInit() {
-    (this.domContainer = document.getElementById("navbar")),
-      (this.domWrapper = this.domContainer.querySelector("ul")),
-      (this.domItems = this.domContainer.querySelectorAll("li"));
+    this.domContainer = document.getElementById("navbar");
+    if (!this.domContainer) {
+      this.domItems = [];
+      return;
+    }
+    this.domWrapper = this.domContainer.querySelector("ul");
+    this.domItems = this.domContainer.querySelectorAll("li");
     for (let e = 0; e < this.domItems.length; e++) {
       let t = this.domItems[e];
       (t._opacity = 1),
         t.addEventListener("click", (n) => this._onItemClick(e)),
         t.addEventListener("mouseenter", (n) => this._onItemMouseEnter(e)),
         t.addEventListener("mouseleave", (n) => this._onItemMouseLeave(e));
-      const i = t.dataset.section.split("|");
+      const i = t.dataset.section ? t.dataset.section.split("|") : [""];
       this.sections.push({
         id: i[0],
         secondaryId: i[1],
         domElement: document.getElementById(i[0]),
         secondaryDomElement: i[1] ? document.getElementById(i[1]) : null,
-        offset: parseFloat(t.dataset.offset),
+        offset: parseFloat(t.dataset.offset || "0"),
       });
     }
   }
@@ -9589,31 +9624,37 @@ class Header {
   domCTA;
   isDarkTheme = !1;
   preInit() {
-    (this.domContainer = document.getElementById("site-header")),
-      (this.domLogo = this.domContainer.querySelector("#site-header__logo")),
-      (this.donLogoAnchor = this.domLogo.querySelector("a")),
-      (this.domMobileLogo = this.domContainer.querySelector(
-        "#site-header__mobile-logo",
-      )),
-      (this.domMobileLogoAnchor = this.domMobileLogo.querySelector("a")),
-      (this.domCTA = this.domContainer.querySelector("#site-header__cta")),
-      (this.domMobileCTA = this.domContainer.querySelector(
-        "#site-header__mobile-cta",
-      )),
-      (this.domMobileWrapper = this.domContainer.querySelector(
-        "#site-header__mobile",
-      )),
+    this.domContainer = document.getElementById("site-header");
+    if (!this.domContainer) return;
+    this.domLogo = this.domContainer.querySelector("#site-header__logo");
+    this.donLogoAnchor = this.domLogo ? this.domLogo.querySelector("a") : null;
+    this.domMobileLogo = this.domContainer.querySelector(
+      "#site-header__mobile-logo",
+    );
+    this.domMobileLogoAnchor = this.domMobileLogo ? this.domMobileLogo.querySelector("a") : null;
+    this.domCTA = this.domContainer.querySelector("#site-header__cta");
+    this.domMobileCTA = this.domContainer.querySelector(
+      "#site-header__mobile-cta",
+    );
+    this.domMobileWrapper = this.domContainer.querySelector(
+      "#site-header__mobile",
+    );
+    if (this.donLogoAnchor) {
       this.donLogoAnchor.addEventListener("click", () => {
-        scrollManager.scrollTo(homeHero.domContainer);
-      }),
-      this.domMobileLogoAnchor.addEventListener("click", () => {
-        scrollManager.scrollTo(homeHero.domContainer);
+        typeof homeHero !== "undefined" && homeHero && homeHero.domContainer && scrollManager.scrollTo(homeHero.domContainer);
       });
+    }
+    if (this.domMobileLogoAnchor) {
+      this.domMobileLogoAnchor.addEventListener("click", () => {
+        typeof homeHero !== "undefined" && homeHero && homeHero.domContainer && scrollManager.scrollTo(homeHero.domContainer);
+      });
+    }
   }
   show() {}
   hide() {}
   resize(e, t) {}
   update(e) {
+    if (!this.domContainer || !this.domLogo) return;
     const t = math.fit(properties.startTime, 2, 3, 0, 1, ease.cubicOut),
       i = math.fit(properties.startTime, 3, 4, 0, 1, ease.cubicOut),
       n = math.mix(-100, 0, t);
@@ -10000,17 +10041,12 @@ function loop(a) {
     update(t),
     (_needsResize = !1);
 }
-preRun();
-document.documentElement.classList.remove("no-js");
-/(ipad|iphone|android)/i.test(
-  (navigator.userAgent || navigator.vendor).toLowerCase(),
-)
-  ? document.documentElement.classList.add("is-mobile")
-  : document.documentElement.classList.add("is-desktop");
+window.__bootWorldEngine = function() {
+  if (window.__worldEngineActive) return;
+  window.__worldEngineActive = true;
+  document.documentElement.classList.remove("no-js");
+  preRun();
+};
 function preventZoom(a) {
   a.preventDefault(), (document.body.style.zoom = 1);
 }
-window.addEventListener("wheel", (a) => a.preventDefault(), { passive: !1 });
-document.addEventListener("gesturestart", (a) => preventZoom(a));
-document.addEventListener("gesturechange", (a) => preventZoom(a));
-document.addEventListener("gestureend", (a) => preventZoom(a));

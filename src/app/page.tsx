@@ -1,5 +1,6 @@
 import { HeroSection } from "@/components/HeroSection";
 import { RockSequence } from "@/components/RockSequence";
+import { WorldExperience } from "@/components/WorldExperience";
 
 export default function Home() {
   return (
@@ -7,10 +8,14 @@ export default function Home() {
       <HeroSection />
       
       {/* 
-        This adds the Produx rock animation right below the Hero Section. 
-        It has a height of 300vh to give the user enough scroll distance.
+        rock sequence section with 1200vh scroll progress and textplosion headings
       */}
       <RockSequence />
+
+      {/* 
+        interactive world experience scene initialized at the tail of the scroll
+      */}
+      <WorldExperience />
       
     </main>
   );
