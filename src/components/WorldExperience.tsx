@@ -1,191 +1,277 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
+import { useScroll, useMotionValueEvent, motion } from "framer-motion";
+import Link from "next/link";
+import { WorldEngine } from "@/lib/engine/WorldEngine";
+import { Volume2, VolumeX, ArrowLeft, Compass, Sparkles } from "lucide-react";
 
-// world experience component that mounts the interactive 3d engine
-// when the user scrolls through the tail of the rock sequence.
+// world experience component mounting our custom three.js webgl engine
 export function WorldExperience() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<WorldEngine | null>(null);
+
+  const [isEngineReady, setIsEngineReady] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [scrollPercent, setScrollPercent] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // framer motion scroll progress tracker across the 500vh container
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  // feed scroll progress updates directly into the engine
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    setScrollPercent(latest);
+    if (engineRef.current) {
+      engineRef.current.setScrollProgress(latest);
+    }
+  });
 
   useEffect(() => {
-    // load the engine script dynamically on client mount
-    let scriptElement: HTMLScriptElement | null = null;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    const loadEngine = async () => {
-      if (typeof window === "undefined") return;
+    // instantiate our custom clean webgl engine
+    const engine = new WorldEngine(canvas);
+    engineRef.current = engine;
 
-      // assign three symbols and legacy compatibility constants to window object
-      (window as any).THREE = THREE;
-      Object.assign(window, THREE, {
-        LinearEncoding: 3000,
-        sRGBEncoding: 3001,
-        BasicDepthPacking: 3200,
-        RGBADepthPacking: 3201,
+    engine
+      .init()
+      .then(() => {
+        setIsEngineReady(true);
+      })
+      .catch((err) => {
+        console.error("failed to boot world engine:", err);
       });
 
-      const loadScript = (src: string, isModule = false): Promise<void> => {
-        return new Promise((resolve, reject) => {
-          const existing = document.querySelector(`script[src="${src}"]`);
-          if (existing) {
-            resolve();
-            return;
-          }
-          const s = document.createElement("script");
-          s.src = src;
-          if (isModule) s.type = "module";
-          s.async = true;
-          s.onload = () => resolve();
-          s.onerror = (e) => reject(e);
-          document.body.appendChild(s);
-        });
-      };
-
-      try {
-        // load the custom logic engine bundle directly
-        await loadScript("/assets/custom_logic.js", true);
-
-        if ((window as any).__bootWorldEngine) {
-          (window as any).__bootWorldEngine();
-          setIsLoaded(true);
-        }
-      } catch (err) {
-        console.error("failed to load world engine runtime:", err);
-      }
+    // mouse move listener for parallax camera look-at tilt
+    const handleMouseMove = (e: MouseEvent) => {
+      const normX = (e.clientX / window.innerWidth) * 2 - 1;
+      const normY = (e.clientY / window.innerHeight) * 2 - 1;
+      engine.setMousePosition(normX, normY);
     };
 
-    loadEngine();
+    // window resize handler to maintain responsive projection
+    const handleResize = () => {
+      engine.onResize();
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      // keep the engine persistent once booted or clean up if unmounted
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("resize", handleResize);
+      engine.destroy();
+      engineRef.current = null;
     };
   }, []);
 
+  // viewport observer to halt three.js render loop when out of screen, eliminating background gpu load
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!engineRef.current) return;
+          if (entry.isIntersecting) {
+            engineRef.current.start();
+          } else {
+            engineRef.current.stop();
+          }
+        });
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isEngineReady]);
+
+  // audio toggle handler
+  const toggleAudio = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio("/track-by-hebel.opus");
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.45;
+    }
+
+    if (isAudioMuted) {
+      audioRef.current
+        .play()
+        .then(() => setIsAudioMuted(false))
+        .catch((err) => console.warn("audio play blocked by browser:", err));
+    } else {
+      audioRef.current.pause();
+      setIsAudioMuted(true);
+    }
+  };
+
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 w-full h-full overflow-hidden bg-black select-none touch-none"
-      style={{ zIndex: 10 }}
-    >
-      {/* primary webgl canvas pinned permanently to the full viewport */}
-      <canvas
-        id="canvas"
-        className="fixed inset-0 w-full h-full block pointer-events-auto"
-        style={{ width: "100vw", height: "100vh", zIndex: 1 }}
-      />
+    <div ref={containerRef} className="relative w-full h-[550vh] bg-[#050c18] select-none">
+      {/* audio element holder */}
+      <audio ref={audioRef} src="/track-by-hebel.opus" preload="none" loop />
 
-      {/* transition overlay canvas */}
-      <canvas id="transition-canvas" style={{ display: "none" }} />
+      {/* fixed sticky viewport hosting the webgl canvas */}
+      <div className="sticky top-0 w-full h-screen overflow-hidden">
+        {/* primary three.js webgl canvas */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full block touch-none pointer-events-auto"
+        />
 
-      {/* pages-container translated by ScrollManager without displacing canvas */}
-      <div
-        id="pages-container"
-        className="absolute top-0 left-0 w-full pointer-events-none"
-        style={{ zIndex: 2, minHeight: "800vh" }}
-      >
-        <div id="home" className="page relative w-full" style={{ minHeight: "800vh" }}>
-          {/* scrollable section triggers that feed scrollManager dimensions */}
-          <div id="home-hero" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div className="subtitle"></div>
-              <div className="kicker"></div>
-              <div className="title"></div>
+        {/* top navigation bar */}
+        <header className="fixed top-6 left-6 right-6 z-40 flex items-center justify-between pointer-events-none">
+          {/* return to top button commented out per user request */}
+          {/*
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="group pointer-events-auto inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-black/40 hover:bg-black/70 border border-white/15 hover:border-amber-400/50 text-white/90 hover:text-white font-[family-name:var(--font-outfit)] text-xs tracking-wider transition-all duration-300 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.6)] cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-amber-400 group-hover:-translate-x-1 transition-transform duration-300" />
+            <span className="font-medium">SCROLL TO TOP</span>
+          </button>
+          */}
+          <div />
+
+          {/* right controls: audio ambiance and clean hud telemetry */}
+          <div className="flex items-center gap-5 pointer-events-auto">
+            <button
+              onClick={toggleAudio}
+              className="text-white/60 hover:text-white transition-colors cursor-pointer p-1"
+              title={isAudioMuted ? "Play Ambiance" : "Mute Ambiance"}
+            >
+              {isAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-white" />}
+            </button>
+
+            {/* altitude pill box commented out per user request */}
+            {/*
+            <div className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/15 text-white/70 font-mono text-xs tracking-widest backdrop-blur-xl">
+              <Compass className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: "12s" }} />
+              <span>ALTITUDE {Math.round(150 + scrollPercent * 650)}M</span>
+            </div>
+            */}
+
+            {/* clean unboxed altitude telemetry without pill containers */}
+            <div className="font-mono text-xs tracking-[0.25em] text-white/60 select-none">
+              ALTITUDE {Math.round(150 + scrollPercent * 650)}M
             </div>
           </div>
+        </header>
 
-          <div id="home-everblade" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div className="title">
-                <span><span></span></span>
-                <span><span></span></span>
-              </div>
-              <div className="description"></div>
-              <div className="subtitle"><span></span></div>
-              <div id="home-everblade__logo"></div>
-              <canvas id="home-everblade__logo-canvas" />
-            </div>
+        {/* interactive scroll progress bar on right edge */}
+        <div className="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-3 pointer-events-none">
+          <div className="text-[10px] font-mono text-white/40 tracking-widest uppercase rotate-90 mb-4 origin-center">
+            SCROLL
           </div>
-
-          <div id="home-everclear" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div className="subtitle"></div>
-              <div className="kicker"></div>
-              <div className="title"></div>
-            </div>
+          <div className="w-0.5 h-36 bg-white/10 overflow-hidden relative">
+            <div
+              className="w-full bg-white/60 transition-all duration-100"
+              style={{ height: `${Math.round(scrollPercent * 100)}%` }}
+            />
           </div>
-
-          <div id="home-pool" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div className="title"><span></span></div>
-              <div className="description"></div>
-              <div id="home-pool__cta"><span></span><svg></svg></div>
-            </div>
-          </div>
-
-          <div id="home-everyone" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div className="kicker"><span></span></div>
-              <div id="home-everyone__lps">
-                <div className="icon-wrapper"></div>
-                <div className="title-wrapper"></div>
-                <div className="title"></div>
-                <div className="subtitle"></div>
-              </div>
-              <div id="home-everyone__borrowers">
-                <div className="icon-wrapper"></div>
-                <div className="title-wrapper"></div>
-                <div className="title"></div>
-                <div className="subtitle"></div>
-              </div>
-              <div id="home-everyone__traders">
-                <div className="icon-wrapper"></div>
-                <div className="title-wrapper"></div>
-                <div className="title"></div>
-                <div className="subtitle"></div>
-              </div>
-            </div>
-          </div>
-
-          <div id="home-evernet" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div id="home-evernet__logo"><svg></svg></div>
-              <div className="title-wrapper"><div className="title"><span></span></div></div>
-              <div className="description"></div>
-              <div className="subtitle"></div>
-              <canvas id="home-evernet__logo-canvas" />
-            </div>
-          </div>
-
-          <div id="home-relayers" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div className="title-wrapper"><div className="title"></div></div>
-              <div className="description"></div>
-              <div className="logo"></div>
-              <canvas id="home-relayers__logo-canvas" />
-            </div>
-          </div>
-
-          <div id="home-join" className="section relative w-full" style={{ minHeight: "100vh" }}>
-            <div className="section__content">
-              <div className="title"><span></span></div>
-              <div className="subtitle"></div>
-              <div id="home-join__buttons"><a></a></div>
-            </div>
-          </div>
-
-          {/* hidden preloader dom nodes required by preloader.preinit */}
-          <div id="preloader" style={{ display: "none" }}>
-            <canvas id="preloader-canvas" />
-            <span id="preloader-percent" />
-            <div id="preloader-logo">
-              <svg viewBox="0 0 100 100">
-                <path d="M0 0 L100 100" />
-                <rect x="0" y="0" width="10" height="10" />
-              </svg>
-            </div>
+          <div className="text-[10px] font-mono text-white/50 mt-4">
+            {Math.round(scrollPercent * 100)}%
           </div>
         </div>
+
+        {/* cinematic chapter overlays synchronized with scroll progress */}
+        <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-6 md:p-16">
+          
+          {/* chapter 1: initial discovery commented out per user request */}
+          {/*
+          <motion.div
+            className="absolute bottom-12 md:bottom-20 left-6 md:left-20 max-w-xl text-left"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{
+              opacity: scrollPercent < 0.22 ? 1 : 0,
+              y: scrollPercent < 0.22 ? 0 : -20,
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-xs tracking-widest uppercase mb-3">
+              <Sparkles className="w-3 h-3" />
+              <span>CANVAS IN MOTION</span>
+            </div>
+            <p className="font-[family-name:var(--font-outfit)] text-sm md:text-lg text-white/70 font-light leading-relaxed">
+              Scroll downward to navigate the mountain range and observe the soaring falcon in real-time WebGL.
+            </p>
+          </motion.div>
+          */}
+
+          {/* chapter 2: the ridge and falcon flight */}
+          <motion.div
+            className="absolute top-1/3 right-6 md:right-24 max-w-lg text-right"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{
+              opacity: scrollPercent >= 0.28 && scrollPercent < 0.65 ? 1 : 0,
+              y: scrollPercent >= 0.28 && scrollPercent < 0.65 ? 0 : 20,
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="font-mono text-xs tracking-[0.25em] text-white/50 uppercase mb-3">
+              SKELETAL FLIGHT
+            </div>
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl md:text-4xl font-extralight text-white tracking-tight mb-2">
+              GPU-DRIVEN DYNAMICS
+            </h2>
+            <p className="font-[family-name:var(--font-outfit)] text-sm md:text-base text-white/60 font-light leading-relaxed">
+              Deforming 21 vertex bones in real-time along a 3D spline trajectory through volumetric mist.
+            </p>
+          </motion.div>
+
+          {/* chapter 3: climax and patron cta */}
+          <motion.div
+            className="absolute flex flex-col items-center justify-center text-center max-w-2xl"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{
+              opacity: scrollPercent >= 0.72 ? 1 : 0,
+              scale: scrollPercent >= 0.72 ? 1 : 0.95,
+              pointerEvents: scrollPercent >= 0.72 ? "auto" : "none",
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="font-mono text-xs tracking-[0.25em] text-white/50 uppercase mb-4">
+              JOIN THE ARCHITECTS
+            </div>
+            <h2 className="font-[family-name:var(--font-outfit)] text-3xl md:text-6xl font-light text-white tracking-tight leading-tight mb-4">
+              SHAPE THE FUTURE OF COLORWALL
+            </h2>
+            <p className="font-[family-name:var(--font-outfit)] text-base md:text-xl text-white/70 font-light max-w-lg leading-relaxed mb-8">
+              Back our vision early to gain access to private beta builds, community renderer shaders, and VIP Discord tiers.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/#patron-tiers"
+                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black font-[family-name:var(--font-outfit)] text-sm font-semibold tracking-wider hover:bg-neutral-200 active:scale-95 transition-all duration-300"
+              >
+                <span>BECOME A PATRON</span>
+                <Sparkles className="w-4 h-4 text-black group-hover:rotate-12 transition-transform duration-300" />
+              </Link>
+            </div>
+          </motion.div>
+
+        </div>
+
+        {/* initial loading indicator overlay while textures and geometries parse */}
+        {!isEngineReady && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#050c18] text-white">
+            <div className="relative w-16 h-16 mb-6">
+              <div className="absolute inset-0 rounded-full border-2 border-white/10 border-t-amber-400 animate-spin" />
+              <div className="absolute inset-2 rounded-full border-2 border-white/10 border-b-orange-400 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+            </div>
+            <div className="text-xs font-mono tracking-[0.25em] text-white/70 uppercase">
+              INITIALIZING WORLD ENGINE
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

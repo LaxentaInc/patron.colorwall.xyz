@@ -107,10 +107,14 @@ export function RockSequence() {
   const y2 = useTransform(scrollYProgress, [0.32, 0.60], [50, -50]);
   const explode2 = useTransform(scrollYProgress, [0.32, 0.42, 0.52, 0.60], [1, 0, 0, 1]);
 
-  // text phase 3 - late scroll (persists at scroll tail with interactive cta)
-  const opacity3 = useTransform(scrollYProgress, [0.64, 0.74, 1.00], [0, 1, 1]);
-  const y3 = useTransform(scrollYProgress, [0.64, 1.00], [50, 0]);
-  const explode3 = useTransform(scrollYProgress, [0.64, 0.74, 1.00], [1, 0, 0]);
+  // text phase 3 - late scroll (persists during late scroll, dissolves before 3d world entry)
+  const opacity3 = useTransform(scrollYProgress, [0.64, 0.74, 0.90, 0.98], [0, 1, 1, 0]);
+  const y3 = useTransform(scrollYProgress, [0.64, 0.90, 1.00], [50, 0, -40]);
+  const explode3 = useTransform(scrollYProgress, [0.64, 0.74, 0.90, 0.98], [1, 0, 0, 1]);
+
+  // rock canvas tail fade and scale-up transition into 3d cosmos
+  const canvasOpacity = useTransform(scrollYProgress, [0.93, 0.99], [1, 0]);
+  const canvasScale = useTransform(scrollYProgress, [0.93, 0.99], [1, 1.08]);
 
   // wire the explosion progress to each textplosion ref imperatively.
   // this avoids re-rendering the component on every scroll tick.
@@ -167,14 +171,18 @@ export function RockSequence() {
         {/* WebGL space dust behind the rock */}
         <SpaceDust />
         
-        {/* canvas is now a 1000x1000 square so the rock has plenty of room to
-            rotate at any angle without getting its corners clipped off. */}
-        <canvas 
-          ref={canvasRef} 
-          width={1000} 
-          height={1000} 
-          className="relative z-10 w-full max-w-[1200px] max-h-screen object-contain drop-shadow-2xl"
-        />
+        {/* canvas is wrapped in smooth motion transforms to fade gracefully into the 3d world */}
+        <motion.div
+          style={{ opacity: canvasOpacity, scale: canvasScale }}
+          className="relative z-10 w-full max-w-[1200px] max-h-screen flex items-center justify-center pointer-events-none"
+        >
+          <canvas 
+            ref={canvasRef} 
+            width={1000} 
+            height={1000} 
+            className="w-full h-full object-contain drop-shadow-2xl"
+          />
+        </motion.div>
 
         {/* Text Overlays - left-aligned, overflow visible so explosions aren't clipped */}
         <div className="absolute inset-0 z-20 pointer-events-none flex flex-col items-start justify-center px-12 lg:px-40" style={{ overflow: 'visible' }}>
@@ -217,17 +225,13 @@ export function RockSequence() {
               Secure your place among our earliest supporters. Unlock exclusive perks, early access drops, and have direct influence over the roadmap.
             </p>
             
-            {/* interactive button to enter the dedicated full-screen 3d world experience */}
-            <div className="pointer-events-auto flex items-center gap-4">
-              <Link
-                href="/world"
-                className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border border-amber-500/40 text-white font-[family-name:var(--font-outfit)] text-base md:text-lg font-medium tracking-wide shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:shadow-[0_0_50px_rgba(245,158,11,0.4)] hover:border-amber-400 hover:scale-105 active:scale-95 transition-all duration-300 backdrop-blur-md"
-              >
-                <span>ENTER 3D WORLD</span>
-                <svg className="w-5 h-5 text-amber-400 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </Link>
+            {/* continuous scroll guide prompt replacing the previous click button */}
+            <div className="flex items-center gap-3 pt-2 text-xs font-mono tracking-[0.25em] text-amber-400/80 uppercase">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>Scroll down to enter 3D World</span>
+              <svg className="w-4 h-4 text-amber-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
             </div>
           </motion.div>
 

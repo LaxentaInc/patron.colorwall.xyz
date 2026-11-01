@@ -1,6 +1,22 @@
 
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Feature Display';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/assets/fonts/FeatureDisplay-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Feature Display';
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+  src: url('/assets/fonts/FeatureDisplay-Extralight.woff2') format('woff2');
+}
+
 @theme {
   --font-display: var(--font-outfit), sans-serif;
   --color-gold-300: #FDE047;

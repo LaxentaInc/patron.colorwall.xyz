@@ -1,5 +1,6 @@
 import { HeroSection } from "@/components/HeroSection";
 import { RockSequence } from "@/components/RockSequence";
+import { WorldExperience } from "@/components/WorldExperience";
 
 export default function Home() {
   return (
@@ -10,6 +11,11 @@ export default function Home() {
         rock sequence section with 1200vh scroll progress and textplosion headings
       */}
       <RockSequence />
+
+      {/* 
+        interactive 3d world experience seamlessly integrated via continuous scrolling
+      */}
+      <WorldExperience />
     </main>
   );
 }
