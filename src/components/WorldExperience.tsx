@@ -5,7 +5,7 @@ import { useScroll, useMotionValueEvent, motion } from "framer-motion";
 import { WorldEngine } from "@/lib/engine/WorldEngine";
 import { Volume2, VolumeX, Sparkles, Check } from "lucide-react";
 
-// world experience component mounting multi-scene 3d engine with lake sanctuary
+// world experience component mounting multi-scene 3d engine with floating islands and lake sanctuary
 export function WorldExperience() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,7 +16,7 @@ export function WorldExperience() {
   const [scrollPercent, setScrollPercent] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // framer motion scroll progress tracker across the expanded 850vh container
+  // framer motion scroll progress tracker across the expanded 1400vh container
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
@@ -113,7 +113,7 @@ export function WorldExperience() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-[850vh] bg-[#050c18] select-none">
+    <div ref={containerRef} className="relative w-full h-[1400vh] bg-[#050c18] select-none">
       {/* audio element holder */}
       <audio ref={audioRef} src="/track-by-hebel.opus" preload="none" loop />
 
@@ -139,26 +139,26 @@ export function WorldExperience() {
               {isAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-white" />}
             </button>
 
-            {/* dynamic unboxed telemetry displaying altitude or warp state */}
+            {/* dynamic unboxed telemetry displaying altitude across all 3 phases */}
             <div className="font-mono text-xs tracking-[0.25em] text-white/60 select-none">
-              {scrollPercent < 0.50
-                ? `ALTITUDE ${Math.round(150 + (scrollPercent / 0.5) * 650)}M`
-                : scrollPercent < 0.65
-                ? "WARP VELOCITY // ACTIVE"
-                : `ALTITUDE ${Math.round(25 + ((1 - scrollPercent) / 0.35) * 15)}M // LAKE LEVEL`}
+              {scrollPercent < 0.35
+                ? `ALTITUDE ${Math.round(150 + (scrollPercent / 0.35) * 650)}M`
+                : scrollPercent < 0.70
+                ? `STRATOSPHERE // ${Math.round(1200 + ((scrollPercent - 0.35) / 0.35) * 2400)}M`
+                : `ALTITUDE 22M // LAKE LEVEL`}
             </div>
           </div>
         </header>
 
         {/* cinematic chapter overlays synchronized with scroll progress */}
         <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-6 md:p-16">
-          {/* chapter 2: the ridge and falcon flight */}
+          {/* chapter 1: the team intro */}
           <motion.div
             className="absolute top-1/3 right-6 md:right-24 max-w-lg text-right"
             initial={{ opacity: 0, y: 20 }}
             animate={{
-              opacity: scrollPercent >= 0.20 && scrollPercent < 0.42 ? 1 : 0,
-              y: scrollPercent >= 0.20 && scrollPercent < 0.42 ? 0 : 20,
+              opacity: scrollPercent >= 0.12 && scrollPercent < 0.26 ? 1 : 0,
+              y: scrollPercent >= 0.12 && scrollPercent < 0.26 ? 0 : 20,
             }}
             transition={{ duration: 0.5 }}
           >
@@ -170,14 +170,14 @@ export function WorldExperience() {
             </p>
           </motion.div>
 
-          {/* chapter 3: climax and patron warp trigger */}
+          {/* chapter 2: mountain pass climax and patron warp trigger */}
           <motion.div
             className="absolute flex flex-col items-center justify-center text-center max-w-2xl"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{
-              opacity: scrollPercent >= 0.42 && scrollPercent < 0.56 ? 1 : 0,
-              scale: scrollPercent >= 0.42 && scrollPercent < 0.56 ? 1 : 0.95,
-              pointerEvents: scrollPercent >= 0.42 && scrollPercent < 0.56 ? "auto" : "none",
+              opacity: scrollPercent >= 0.26 && scrollPercent < 0.37 ? 1 : 0,
+              scale: scrollPercent >= 0.26 && scrollPercent < 0.37 ? 1 : 0.95,
+              pointerEvents: scrollPercent >= 0.26 && scrollPercent < 0.37 ? "auto" : "none",
             }}
             transition={{ duration: 0.5 }}
           >
@@ -199,14 +199,35 @@ export function WorldExperience() {
             </div>
           </motion.div>
 
+          {/* chapter 3: floating island expanse in stratosphere */}
+          <motion.div
+            className="absolute bottom-24 left-6 md:left-24 max-w-md text-left"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{
+              opacity: scrollPercent >= 0.44 && scrollPercent < 0.62 ? 1 : 0,
+              y: scrollPercent >= 0.44 && scrollPercent < 0.62 ? 0 : 20,
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="font-mono text-xs tracking-[0.3em] text-white/50 uppercase mb-2">
+              THE FLOATING EXPANSE
+            </div>
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl md:text-4xl font-extralight text-white tracking-tight mb-2">
+              Suspended in Light
+            </h2>
+            <p className="font-[family-name:var(--font-outfit)] text-sm md:text-base text-white/60 font-light leading-relaxed">
+              Floating monoliths suspended above the clouds, carrying procedural composite shaders and living neon flora through the skies.
+            </p>
+          </motion.div>
+
           {/* phase 3: lake sanctuary patron tiers overlay */}
           <motion.div
             className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-12 text-center"
             initial={{ opacity: 0, y: 30 }}
             animate={{
-              opacity: scrollPercent >= 0.68 ? 1 : 0,
-              y: scrollPercent >= 0.68 ? 0 : 30,
-              pointerEvents: scrollPercent >= 0.68 ? "auto" : "none",
+              opacity: scrollPercent >= 0.72 ? 1 : 0,
+              y: scrollPercent >= 0.72 ? 0 : 30,
+              pointerEvents: scrollPercent >= 0.72 ? "auto" : "none",
             }}
             transition={{ duration: 0.6 }}
           >

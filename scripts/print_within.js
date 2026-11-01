@@ -6,3 +6,4 @@ async function printWithin() {
   console.log("Preview:", text.slice(0, 1000));
 }
 printWithin();
+

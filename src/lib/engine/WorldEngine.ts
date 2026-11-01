@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { BufLoader } from "./BufLoader";
 import { Scene1 } from "./Scene1";
+import { Scene2 } from "./Scene2";
 import { LineTrails } from "./LineTrails";
 import { Scene3 } from "./Scene3";
 
@@ -13,6 +14,7 @@ export class WorldEngine {
   private loader: BufLoader;
   private textureLoader: THREE.TextureLoader;
   public scene1: Scene1;
+  public scene2: Scene2;
   public lineTrails: LineTrails;
   public scene3: Scene3;
 
@@ -55,25 +57,28 @@ export class WorldEngine {
     this.renderer.toneMappingExposure = 1.05;
 
     // initialize perspective camera
-    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 10, 4000);
+    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 10, 5000);
     this.camera.position.set(0, 150, 800);
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color("#050c18");
+    this.scene.background = new THREE.Color("#0c1c30");
 
     // instantiate loaders and sub-scene coordinators
     this.loader = new BufLoader();
     this.textureLoader = new THREE.TextureLoader();
 
     this.scene1 = new Scene1(this.loader, this.textureLoader);
+    this.scene2 = new Scene2(this.loader, this.textureLoader);
     this.lineTrails = new LineTrails(this.loader, this.textureLoader);
     this.scene3 = new Scene3(this.loader, this.textureLoader);
 
     this.scene.add(this.scene1.container);
+    this.scene.add(this.scene2.container);
     this.scene.add(this.lineTrails.container);
     this.scene.add(this.scene3.container);
 
     // hide subsequent scenes initially until active
+    this.scene2.container.visible = false;
     this.lineTrails.container.visible = false;
     this.scene3.container.visible = false;
   }
@@ -82,9 +87,16 @@ export class WorldEngine {
   public async init(): Promise<void> {
     await Promise.all([
       this.scene1.load(),
+      this.scene2.load(),
       this.lineTrails.load(),
       this.scene3.load(),
     ]);
+
+    // detach falcon from scene 1 container to global scene root to persist through all scenes
+    if (this.scene1.birdMesh && this.scene1.birdMesh.parent) {
+      this.scene1.birdMesh.parent.remove(this.scene1.birdMesh);
+      this.scene.add(this.scene1.birdMesh);
+    }
 
     this.onResize();
     this.start();
@@ -130,48 +142,62 @@ export class WorldEngine {
     const scroll = this.currentScroll;
     const isMobile = this.camera.aspect < 1.0;
 
-    // phase 1: scene 1 mountain passage (0.0 to 0.50)
-    if (scroll < 0.50) {
-      const p1 = Math.max(0, Math.min(1, scroll / 0.50));
+    // phase 1: mountain pass and falcon ascent (0.00 to 0.35)
+    if (scroll < 0.35) {
+      const p1 = Math.max(0, Math.min(1, scroll / 0.35));
       this.scene1.container.visible = true;
+      this.scene2.container.visible = false;
       this.lineTrails.container.visible = false;
       this.scene3.container.visible = false;
 
       this.updateScene1Camera(p1, isMobile);
       this.scene1.update(elapsedTime, deltaTime, p1, this.camera);
     }
-    // phase 2: samsy lineengine ribbon warp transition (0.50 to 0.65)
-    else if (scroll >= 0.50 && scroll < 0.65) {
-      const warpT = (scroll - 0.50) / 0.15;
-      const smoothWarp = warpT * warpT * (3.0 - 2.0 * warpT);
+    // phase 2: upper-sky floating island archipelago, neon flora, and ribbon trails (0.35 to 0.70)
+    else if (scroll >= 0.35 && scroll < 0.70) {
+      const p2 = (scroll - 0.35) / 0.35;
 
-      this.scene1.container.visible = warpT < 0.75;
+      this.scene1.container.visible = p2 < 0.15;
+      this.scene2.container.visible = true;
       this.lineTrails.container.visible = true;
-      this.scene3.container.visible = warpT > 0.25;
+      this.scene3.container.visible = p2 > 0.85;
 
-      // ribbon luminous pulse curve
-      const ribbonOpacity = Math.sin(warpT * Math.PI) * 1.2;
-      this.lineTrails.update(elapsedTime, Math.min(1, ribbonOpacity));
+      // animate volumetric energetic ribbons around islands
+      const ribbonOpacity = Math.sin(p2 * Math.PI) * 1.3;
+      this.lineTrails.update(elapsedTime, Math.min(1.0, ribbonOpacity));
 
-      // update scene 1 at end state and scene 3 at initial state
-      this.scene1.update(elapsedTime, deltaTime, 1.0, this.camera);
-      this.scene3.update(elapsedTime, 0.0, this.camera, isMobile);
+      // drive wing flapping skeletal animation
+      if (this.scene1.birdUniforms) {
+        this.scene1.birdUniforms.u_animationFrame.value = elapsedTime * 38.0;
+      }
 
-      // interpolate camera from scene 1 terminus to scene 3 lake entrance
-      this.updateWarpCamera(smoothWarp);
+      // update floating islands and evaluate 7-point spline for camera and falcon
+      this.scene2.update(elapsedTime, p2, this.camera, this.scene1.birdMesh);
+
+      // keep scene 3 pre-warmed for seamless landing
+      if (p2 > 0.8) {
+        this.scene3.update(elapsedTime, 0.0, this.camera, isMobile);
+      }
     }
-    // phase 3: scene 3 lake sanctuary and water simulation (0.65 to 1.0)
+    // phase 3: lake sanctuary and water simulation (0.70 to 1.00)
     else {
-      const p3 = Math.max(0, Math.min(1, (scroll - 0.65) / 0.35));
+      const p3 = Math.max(0, Math.min(1, (scroll - 0.70) / 0.30));
+
       this.scene1.container.visible = false;
+      this.scene2.container.visible = false;
       this.lineTrails.container.visible = false;
       this.scene3.container.visible = true;
+
+      // hide falcon when resting at the lake sanctuary
+      if (this.scene1.birdMesh) {
+        this.scene1.birdMesh.visible = p3 < 0.3;
+      }
 
       this.scene3.update(elapsedTime, p3, this.camera, isMobile);
     }
 
     // apply subtle mouse parallax tilt on top of active camera orientation
-    const maxLookAngle = 0.06;
+    const maxLookAngle = 0.05;
     this.mouseEuler.set(this.currentMouseY * maxLookAngle, -this.currentMouseX * maxLookAngle, 0);
     this.mouseQuat.setFromEuler(this.mouseEuler);
     this.camera.quaternion.multiply(this.mouseQuat);
@@ -210,34 +236,11 @@ export class WorldEngine {
     }
   }
 
-  // interpolates camera during lineengine ribbon warp between scene 1 end and scene 3 start
-  private updateWarpCamera(ratio: number): void {
-    const k1 = this.scene1.cameraKeyframes;
-    const k3 = this.scene3.cameraKeyframes;
-
-    if (k1.positions && k3.positions && k1.count > 0 && k3.count > 0) {
-      const end1Idx = (k1.count - 1) * 3;
-      const end1QuatIdx = (k1.count - 1) * 4;
-
-      this.camPos0.set(k1.positions[end1Idx], k1.positions[end1Idx + 1], k1.positions[end1Idx + 2]);
-      this.camPos1.set(k3.positions[0], k3.positions[1], k3.positions[2]);
-
-      // add parabolic elevation arc so the camera flies up through ribbons before descending into lake
-      this.camera.position.lerpVectors(this.camPos0, this.camPos1, ratio);
-      this.camera.position.y += Math.sin(ratio * Math.PI) * 120.0;
-
-      this.camQuat0.set(k1.orientations![end1QuatIdx], k1.orientations![end1QuatIdx + 1], k1.orientations![end1QuatIdx + 2], k1.orientations![end1QuatIdx + 3]);
-      this.camQuat1.set(k3.orientations![0], k3.orientations![1], k3.orientations![2], k3.orientations![3]);
-
-      this.camera.quaternion.slerpQuaternions(this.camQuat0, this.camQuat1, ratio);
-    }
-  }
-
-  // smoothly warps camera from current position through ribbons into lake sanctuary
+  // smoothly warps camera through floating islands directly into lake sanctuary
   public warpToLake(): void {
     if (typeof window === "undefined") return;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const targetScrollY = docHeight * 0.85;
+    const targetScrollY = docHeight * 0.88;
     window.scrollTo({
       top: targetScrollY,
       behavior: "smooth",

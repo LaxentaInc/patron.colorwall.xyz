@@ -64,11 +64,11 @@ export class Scene1 {
   };
 
   // bird mesh references and skeletal data textures
-  private birdMesh: THREE.Mesh | null = null;
+  public birdMesh: THREE.Mesh | null = null;
   private birdPathPositions: Float32Array | null = null;
   private birdPathOrients: Float32Array | null = null;
   private birdPathCount = 0;
-  private birdUniforms = {
+  public birdUniforms = {
     u_positionTexture: { value: null as THREE.DataTexture | null },
     u_orientTexture: { value: null as THREE.DataTexture | null },
     u_boneCount: { value: 21 },

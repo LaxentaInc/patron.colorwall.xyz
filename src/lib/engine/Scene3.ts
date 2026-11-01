@@ -47,19 +47,18 @@ export class Scene3 {
   // loads all scene 3 geometries, textures, and camera path
   public async load(): Promise<void> {
     try {
-      // 1. load sky dome
-      const skyGeo = new THREE.SphereGeometry(2200, 16, 16);
+      // 1. load sky dome with expansive radius and luminous twilight gradient
+      const skyGeo = new THREE.SphereGeometry(3500, 24, 24);
       const skyMat = new THREE.ShaderMaterial({
         vertexShader: skyVertexShader,
         fragmentShader: skyFragmentShader,
         uniforms: {
-          u_skyColor0: this.sharedUniforms.u_skyColor0,
-          u_skyColor1: this.sharedUniforms.u_skyColor1,
+          u_skyColor0: { value: new THREE.Color("#244e78") },
+          u_skyColor1: { value: new THREE.Color("#0c1c30") },
           u_dimRatio: { value: 0 },
         },
         side: THREE.BackSide,
         depthWrite: false,
-        depthTest: false,
       });
       this.skyDome = new THREE.Mesh(skyGeo, skyMat);
       this.skyDome.renderOrder = -1;
