@@ -225,7 +225,8 @@ export function RockSequence() {
               Secure your place among our earliest supporters. Unlock exclusive perks, early access drops, and have direct influence over the roadmap.
             </p>
             
-            {/* continuous scroll guide prompt replacing the previous click button */}
+            {/* scroll prompt commented out per user request to preserve clean continuous flow */}
+            {/*
             <div className="flex items-center gap-3 pt-2 text-xs font-mono tracking-[0.25em] text-amber-400/80 uppercase">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <span>Scroll down to enter 3D World</span>
@@ -233,6 +234,7 @@ export function RockSequence() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </div>
+            */}
           </motion.div>
 
         </div>
