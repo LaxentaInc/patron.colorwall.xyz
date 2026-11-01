@@ -151,14 +151,6 @@ export function WorldExperience() {
               {isAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-white" />}
             </button>
 
-            {/* altitude pill box commented out per user request */}
-            {/*
-            <div className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/15 text-white/70 font-mono text-xs tracking-widest backdrop-blur-xl">
-              <Compass className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: "12s" }} />
-              <span>ALTITUDE {Math.round(150 + scrollPercent * 650)}M</span>
-            </div>
-            */}
-
             {/* clean unboxed altitude telemetry without pill containers */}
             <div className="font-mono text-xs tracking-[0.25em] text-white/60 select-none">
               ALTITUDE {Math.round(150 + scrollPercent * 650)}M
@@ -168,28 +160,7 @@ export function WorldExperience() {
 
         {/* cinematic chapter overlays synchronized with scroll progress */}
         <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-6 md:p-16">
-          
-          {/* chapter 1: initial discovery commented out per user request */}
-          {/*
-          <motion.div
-            className="absolute bottom-12 md:bottom-20 left-6 md:left-20 max-w-xl text-left"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{
-              opacity: scrollPercent < 0.22 ? 1 : 0,
-              y: scrollPercent < 0.22 ? 0 : -20,
-            }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-xs tracking-widest uppercase mb-3">
-              <Sparkles className="w-3 h-3" />
-              <span>CANVAS IN MOTION</span>
-            </div>
-            <p className="font-[family-name:var(--font-outfit)] text-sm md:text-lg text-white/70 font-light leading-relaxed">
-              Scroll downward to navigate the mountain range and observe the soaring falcon in real-time WebGL.
-            </p>
-          </motion.div>
-          */}
-
+        
           {/* chapter 2: the ridge and falcon flight */}
           <motion.div
             className="absolute top-1/3 right-6 md:right-24 max-w-lg text-right"
@@ -222,21 +193,21 @@ export function WorldExperience() {
             }}
             transition={{ duration: 0.5 }}
           >
-            <div className="font-mono text-xs tracking-[0.25em] text-white/50 uppercase mb-4">
+            <div className="font-mono text-xs tracking-[0.25em] text-white/55 uppercase mb-4">
               
             </div>
             <h2 className="font-[family-name:var(--font-outfit)] text-3xl md:text-6xl font-light text-white tracking-tight leading-tight mb-4">
-              SHAPE THE FUTURE OF COLORWALL
+              Tag along us :D
             </h2>
             <p className="font-[family-name:var(--font-outfit)] text-base md:text-xl text-white/70 font-light max-w-lg leading-relaxed mb-8">
-              Back our vision early to gain access to private beta builds, community renderer shaders, and VIP Discord tiers.
+              Back our vision early to gain access to nightly builds, and VIP tiers. And well , you could also say that you are a multi-millionare.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/#patron-tiers"
                 className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black font-[family-name:var(--font-outfit)] text-sm font-semibold tracking-wider hover:bg-neutral-200 active:scale-95 transition-all duration-300"
               >
-                <span>BECOME A PATRON</span>
+                <span>BECOME A PATRON  &lt;3</span>
                 <Sparkles className="w-4 h-4 text-black group-hover:rotate-12 transition-transform duration-300" />
               </Link>
             </div>
