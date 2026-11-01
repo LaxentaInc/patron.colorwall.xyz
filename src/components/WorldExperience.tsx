@@ -188,14 +188,14 @@ export function WorldExperience() {
               Back our vision early to gain access to nightly builds, and VIP tiers. And well, you could also say that you are a multi-millionaire.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => engineRef.current?.warpToLake()}
+              <p
+                // type="button"
+                // onClick={() => engineRef.current?.warpToLake()}
                 className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black font-[family-name:var(--font-outfit)] text-sm font-semibold tracking-wider hover:bg-neutral-200 active:scale-95 transition-all duration-300 cursor-pointer"
               >
-                <span>BECOME A PATRON &lt;3</span>
+                <span>Keep scrolling!</span>
                 <Sparkles className="w-4 h-4 text-black group-hover:rotate-12 transition-transform duration-300" />
-              </button>
+              </p>
             </div>
           </motion.div>
 
