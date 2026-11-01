@@ -239,8 +239,9 @@ export function WorldExperience() {
                 Shape The Foundation
               </h2>
               <p className="font-[family-name:var(--font-outfit)] text-sm md:text-base text-white/60 font-light max-w-xl mx-auto">
-                Directly fuel independent graphics programming, composite shader runtimes, and local sandbox performance.
+                Directly fuel independent programming, opensource projects, runtime upgrades of colorwall and it's sister products, and aura of the developer too.
               </p>
+              <p> All at once, You are this cool. </p>
             </div>
 
             {/* clean unboxed tier cards floating over the lake */}
