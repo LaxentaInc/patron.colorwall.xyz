@@ -57,6 +57,15 @@ body {
   margin: 0;
 }
 
+/* hide scrollbars for clean immersive experience */
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+
 /* patreon-style ultra-thin hero typography.
    letter-spacing -0.06em and line-height 0.98 are directly from patreon's css,
    which creates those massive, tightly packed editorial headlines. */

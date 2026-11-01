@@ -166,22 +166,6 @@ export function WorldExperience() {
           </div>
         </header>
 
-        {/* interactive scroll progress bar on right edge */}
-        <div className="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-3 pointer-events-none">
-          <div className="text-[10px] font-mono text-white/40 tracking-widest uppercase rotate-90 mb-4 origin-center">
-            SCROLL
-          </div>
-          <div className="w-0.5 h-36 bg-white/10 overflow-hidden relative">
-            <div
-              className="w-full bg-white/60 transition-all duration-100"
-              style={{ height: `${Math.round(scrollPercent * 100)}%` }}
-            />
-          </div>
-          <div className="text-[10px] font-mono text-white/50 mt-4">
-            {Math.round(scrollPercent * 100)}%
-          </div>
-        </div>
-
         {/* cinematic chapter overlays synchronized with scroll progress */}
         <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-6 md:p-16">
           

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { BufLoader } from "./BufLoader";
-import { skyVertexShader, skyFragmentShader } from "./shaders/skyShaders";
+import { skyVertexShader, skyFragmentShader, cloudVertexShader, cloudFragmentShader } from "./shaders/skyShaders";
 import { mountainVertexShader, mountainFragmentShader } from "./shaders/mountainShaders";
 import { birdVertexShader, birdFragmentShader } from "./shaders/birdShaders";
 import {
@@ -49,6 +49,18 @@ export class Scene1 {
     u_endRatio: { value: 1.0 },
     u_glowColor: { value: new THREE.Color("#ffdd88") },
     u_tintColor: { value: new THREE.Color("#f59e0b") },
+  };
+
+  // sky clouds group and animation references
+  private cloudsGroup = new THREE.Group();
+  private cloudMeshes: THREE.Mesh[] = [];
+  private cloudBasePositions: THREE.Vector3[] = [];
+  private cloudUniforms = {
+    u_texture: { value: null as THREE.Texture | null },
+    u_dimRatio: { value: 0 },
+    u_opacity: { value: 0.8 },
+    u_tintDay: { value: new THREE.Color("#ffffff") },
+    u_tintNight: { value: new THREE.Color("#2c3e55") },
   };
 
   // bird mesh references and skeletal data textures
@@ -100,10 +112,11 @@ export class Scene1 {
       this.container.add(skyMesh);
 
       // 2. load background mountains & ridge textures
-      const [bgTex, ridgeTex, mountainTex] = await Promise.all([
+      const [bgTex, ridgeTex, mountainTex, cloudTex] = await Promise.all([
         this.loadTextureAsync("/assets/textures/scene1/SC_01_BACKGROUND_MOUNTAINS_TEXTURE.webp"),
         this.loadTextureAsync("/assets/textures/scene1/SC_01_RIDGE_TEXTURE.webp"),
         this.loadTextureAsync("/assets/textures/scene1/SC_01_MOUNTAIN_TEXTURE.webp"),
+        this.loadTextureAsync("/assets/textures/cloud.png"),
       ]);
 
       // 3. load terrain models
@@ -189,7 +202,10 @@ export class Scene1 {
       // 6. load 3d title models
       await this.loadTitleAsync();
 
-      // 7. create ambient floating particles
+      // 7. create atmospheric sky clouds
+      this.createClouds(cloudTex);
+
+      // 8. create ambient floating particles
       this.createParticles();
 
       // 8. load camera animation path
@@ -460,6 +476,50 @@ export class Scene1 {
     this.container.add(particlesMesh);
   }
 
+  // generates sky cloud billboards with natural altitude distribution
+  private createClouds(cloudTex: THREE.Texture): void {
+    cloudTex.wrapS = THREE.ClampToEdgeWrapping;
+    cloudTex.wrapT = THREE.ClampToEdgeWrapping;
+    this.cloudUniforms.u_texture.value = cloudTex;
+
+    const cloudAspect = 1024 / 556; // 1.8417 aspect ratio of cloud.png
+    const cloudGeo = new THREE.PlaneGeometry(cloudAspect, 1.0);
+
+    const cloudConfigs = [
+      { x: -680, y: 460, z: -1100, scale: 440, opacity: 0.78 },
+      { x: 740, y: 520, z: -1300, scale: 500, opacity: 0.72 },
+      { x: -50, y: 600, z: -1500, scale: 390, opacity: 0.62 },
+      { x: -1150, y: 350, z: -900, scale: 350, opacity: 0.65 },
+      { x: 1100, y: 390, z: -1050, scale: 400, opacity: 0.70 },
+      { x: -380, y: 410, z: -850, scale: 300, opacity: 0.58 },
+    ];
+
+    for (const cfg of cloudConfigs) {
+      const mat = new THREE.ShaderMaterial({
+        vertexShader: cloudVertexShader,
+        fragmentShader: cloudFragmentShader,
+        uniforms: {
+          ...this.cloudUniforms,
+          u_opacity: { value: cfg.opacity },
+        },
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+
+      const mesh = new THREE.Mesh(cloudGeo, mat);
+      mesh.position.set(cfg.x, cfg.y, cfg.z);
+      mesh.scale.set(cfg.scale, cfg.scale, 1.0);
+      mesh.renderOrder = -2;
+
+      this.cloudMeshes.push(mesh);
+      this.cloudBasePositions.push(mesh.position.clone());
+      this.cloudsGroup.add(mesh);
+    }
+
+    this.container.add(this.cloudsGroup);
+  }
+
   // helper to promisify texture loading
   private loadTextureAsync(url: string): Promise<THREE.Texture> {
     return new Promise((resolve, reject) => {
@@ -493,6 +553,14 @@ export class Scene1 {
 
     // 3. update bird skeletal flapping and flight curve interpolation
     this.updateBird(time, scrollProgress);
+
+    // 4. update sky clouds time-of-day dimming and ambient drift
+    this.cloudUniforms.u_dimRatio.value = dimRatio;
+    for (let i = 0; i < this.cloudMeshes.length; i++) {
+      const mesh = this.cloudMeshes[i];
+      const basePos = this.cloudBasePositions[i];
+      mesh.position.x = basePos.x + Math.sin(time * 0.05 + i * 1.5) * 20;
+    }
   }
 
   // calculates responsive title scale and reveal progress

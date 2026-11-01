@@ -35,3 +35,36 @@ void main() {
   gl_FragColor = vec4(skyColor, 1.0);
 }
 `;
+
+// vertex shader for sky cloud billboards
+export const cloudVertexShader = /* glsl */ `
+varying vec2 v_uv;
+
+void main() {
+  v_uv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+// fragment shader for realistic sky clouds with time of day dimming
+export const cloudFragmentShader = /* glsl */ `
+uniform sampler2D u_texture;
+uniform float u_dimRatio;
+uniform float u_opacity;
+uniform vec3 u_tintDay;
+uniform vec3 u_tintNight;
+
+varying vec2 v_uv;
+
+void main() {
+  vec4 tex = texture2D(u_texture, v_uv);
+  if (tex.a < 0.01) discard;
+
+  // interpolate cloud color from crisp white to deep twilight indigo
+  vec3 tint = mix(u_tintDay, u_tintNight, clamp(u_dimRatio, 0.0, 1.0));
+  vec3 rgb = tex.rgb * tint;
+  float alpha = tex.a * u_opacity * mix(1.0, 0.5, u_dimRatio);
+
+  gl_FragColor = vec4(rgb, alpha);
+}
+`;
