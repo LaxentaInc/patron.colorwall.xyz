@@ -2,11 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useScroll, useMotionValueEvent, motion } from "framer-motion";
-import Link from "next/link";
 import { WorldEngine } from "@/lib/engine/WorldEngine";
-import { Volume2, VolumeX, ArrowLeft, Compass, Sparkles } from "lucide-react";
+import { Volume2, VolumeX, Sparkles, Check } from "lucide-react";
 
-// world experience component mounting our custom three.js webgl engine
+// world experience component mounting multi-scene 3d engine with lake sanctuary
 export function WorldExperience() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -17,7 +16,7 @@ export function WorldExperience() {
   const [scrollPercent, setScrollPercent] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // framer motion scroll progress tracker across the 500vh container
+  // framer motion scroll progress tracker across the expanded 850vh container
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
@@ -35,7 +34,7 @@ export function WorldExperience() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // instantiate our custom clean webgl engine
+    // instantiate our custom multi-scene webgl engine
     const engine = new WorldEngine(canvas);
     engineRef.current = engine;
 
@@ -114,7 +113,7 @@ export function WorldExperience() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-[550vh] bg-[#050c18] select-none">
+    <div ref={containerRef} className="relative w-full h-[850vh] bg-[#050c18] select-none">
       {/* audio element holder */}
       <audio ref={audioRef} src="/track-by-hebel.opus" preload="none" loop />
 
@@ -128,20 +127,9 @@ export function WorldExperience() {
 
         {/* top navigation bar */}
         <header className="fixed top-6 left-6 right-6 z-40 flex items-center justify-between pointer-events-none">
-          {/* return to top button commented out per user request */}
-          {/*
-          <button
-            type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="group pointer-events-auto inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-black/40 hover:bg-black/70 border border-white/15 hover:border-amber-400/50 text-white/90 hover:text-white font-[family-name:var(--font-outfit)] text-xs tracking-wider transition-all duration-300 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.6)] cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-amber-400 group-hover:-translate-x-1 transition-transform duration-300" />
-            <span className="font-medium">SCROLL TO TOP</span>
-          </button>
-          */}
           <div />
 
-          {/* right controls: audio ambiance and clean hud telemetry */}
+          {/* right controls: audio ambiance and clean unboxed hud telemetry */}
           <div className="flex items-center gap-5 pointer-events-auto">
             <button
               onClick={toggleAudio}
@@ -151,29 +139,29 @@ export function WorldExperience() {
               {isAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-white" />}
             </button>
 
-            {/* clean unboxed altitude telemetry without pill containers */}
+            {/* dynamic unboxed telemetry displaying altitude or warp state */}
             <div className="font-mono text-xs tracking-[0.25em] text-white/60 select-none">
-              ALTITUDE {Math.round(150 + scrollPercent * 650)}M
+              {scrollPercent < 0.50
+                ? `ALTITUDE ${Math.round(150 + (scrollPercent / 0.5) * 650)}M`
+                : scrollPercent < 0.65
+                ? "WARP VELOCITY // ACTIVE"
+                : `ALTITUDE ${Math.round(25 + ((1 - scrollPercent) / 0.35) * 15)}M // LAKE LEVEL`}
             </div>
           </div>
         </header>
 
         {/* cinematic chapter overlays synchronized with scroll progress */}
         <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-6 md:p-16">
-        
           {/* chapter 2: the ridge and falcon flight */}
           <motion.div
             className="absolute top-1/3 right-6 md:right-24 max-w-lg text-right"
             initial={{ opacity: 0, y: 20 }}
             animate={{
-              opacity: scrollPercent >= 0.28 && scrollPercent < 0.65 ? 1 : 0,
-              y: scrollPercent >= 0.28 && scrollPercent < 0.65 ? 0 : 20,
+              opacity: scrollPercent >= 0.20 && scrollPercent < 0.42 ? 1 : 0,
+              y: scrollPercent >= 0.20 && scrollPercent < 0.42 ? 0 : 20,
             }}
             transition={{ duration: 0.5 }}
           >
-            {/* <div className="font-mono text-xs tracking-[0.25em] text-white/50 uppercase mb-3">
-              Hi THERE!
-            </div> */}
             <h2 className="font-[family-name:var(--font-outfit)] text-2xl md:text-4xl font-extralight text-white tracking-tight mb-2">
               THE COLORWALL TEAM!
             </h2>
@@ -182,48 +170,191 @@ export function WorldExperience() {
             </p>
           </motion.div>
 
-          {/* chapter 3: climax and patron cta */}
+          {/* chapter 3: climax and patron warp trigger */}
           <motion.div
             className="absolute flex flex-col items-center justify-center text-center max-w-2xl"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{
-              opacity: scrollPercent >= 0.72 ? 1 : 0,
-              scale: scrollPercent >= 0.72 ? 1 : 0.95,
-              pointerEvents: scrollPercent >= 0.72 ? "auto" : "none",
+              opacity: scrollPercent >= 0.42 && scrollPercent < 0.56 ? 1 : 0,
+              scale: scrollPercent >= 0.42 && scrollPercent < 0.56 ? 1 : 0.95,
+              pointerEvents: scrollPercent >= 0.42 && scrollPercent < 0.56 ? "auto" : "none",
             }}
             transition={{ duration: 0.5 }}
           >
-            <div className="font-mono text-xs tracking-[0.25em] text-white/55 uppercase mb-4">
-              
-            </div>
             <h2 className="font-[family-name:var(--font-outfit)] text-3xl md:text-6xl font-light text-white tracking-tight leading-tight mb-4">
               Tag along us :D
             </h2>
             <p className="font-[family-name:var(--font-outfit)] text-base md:text-xl text-white/70 font-light max-w-lg leading-relaxed mb-8">
-              Back our vision early to gain access to nightly builds, and VIP tiers. And well , you could also say that you are a multi-millionare.
+              Back our vision early to gain access to nightly builds, and VIP tiers. And well, you could also say that you are a multi-millionaire.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="/#patron-tiers"
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black font-[family-name:var(--font-outfit)] text-sm font-semibold tracking-wider hover:bg-neutral-200 active:scale-95 transition-all duration-300"
+              <button
+                type="button"
+                onClick={() => engineRef.current?.warpToLake()}
+                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black font-[family-name:var(--font-outfit)] text-sm font-semibold tracking-wider hover:bg-neutral-200 active:scale-95 transition-all duration-300 cursor-pointer"
               >
-                <span>BECOME A PATRON  &lt;3</span>
+                <span>BECOME A PATRON &lt;3</span>
                 <Sparkles className="w-4 h-4 text-black group-hover:rotate-12 transition-transform duration-300" />
-              </Link>
+              </button>
             </div>
           </motion.div>
 
+          {/* phase 3: lake sanctuary patron tiers overlay */}
+          <motion.div
+            className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-12 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{
+              opacity: scrollPercent >= 0.68 ? 1 : 0,
+              y: scrollPercent >= 0.68 ? 0 : 30,
+              pointerEvents: scrollPercent >= 0.68 ? "auto" : "none",
+            }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="max-w-4xl mx-auto mb-8">
+              <div className="font-mono text-xs tracking-[0.3em] text-white/50 uppercase mb-2">
+                COLORWALL SANCTUARY
+              </div>
+              <h2 className="font-[family-name:var(--font-outfit)] text-3xl md:text-5xl font-light text-white tracking-tight mb-3">
+                Shape The Foundation
+              </h2>
+              <p className="font-[family-name:var(--font-outfit)] text-sm md:text-base text-white/60 font-light max-w-xl mx-auto">
+                Directly fuel independent graphics programming, composite shader runtimes, and local sandbox performance.
+              </p>
+            </div>
+
+            {/* clean unboxed tier cards floating over the lake */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full text-left">
+              {/* tier 1: supporter */}
+              <div className="p-6 md:p-8 bg-black/40 border border-white/10 backdrop-blur-md flex flex-col justify-between hover:border-white/25 transition-all duration-300">
+                <div>
+                  <div className="font-mono text-xs tracking-wider text-white/50 uppercase mb-1">
+                    TIER 01
+                  </div>
+                  <h3 className="font-[family-name:var(--font-outfit)] text-xl font-medium text-white mb-2">
+                    Supporter
+                  </h3>
+                  <div className="text-2xl font-light text-white mb-6">
+                    $5<span className="text-xs text-white/50 font-normal"> / month</span>
+                  </div>
+                  <ul className="space-y-3 mb-8 text-xs font-light text-white/70">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Nightly bleeding-edge test builds</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Backer role in private Discord</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Name listed in ColorWall app credits</span>
+                    </li>
+                  </ul>
+                </div>
+                <a
+                  href="https://patreon.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full text-center py-3 border border-white/20 hover:border-white/60 text-white font-[family-name:var(--font-outfit)] text-xs uppercase tracking-wider transition-colors duration-200"
+                >
+                  Join as Supporter
+                </a>
+              </div>
+
+              {/* tier 2: pioneer */}
+              <div className="p-6 md:p-8 bg-black/50 border border-white/25 backdrop-blur-md flex flex-col justify-between hover:border-white/50 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                <div>
+                  <div className="font-mono text-xs tracking-wider text-white/70 uppercase mb-1">
+                    TIER 02 // RECOMMENDED
+                  </div>
+                  <h3 className="font-[family-name:var(--font-outfit)] text-xl font-medium text-white mb-2">
+                    Pioneer
+                  </h3>
+                  <div className="text-2xl font-light text-white mb-6">
+                    $15<span className="text-xs text-white/50 font-normal"> / month</span>
+                  </div>
+                  <ul className="space-y-3 mb-8 text-xs font-light text-white/70">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>All Supporter benefits included</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Access to beta composite scene shaders</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Interactive widget runtime SDK docs</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Direct voting power on engine features</span>
+                    </li>
+                  </ul>
+                </div>
+                <a
+                  href="https://patreon.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full text-center py-3 bg-white text-black hover:bg-neutral-200 font-[family-name:var(--font-outfit)] text-xs font-semibold uppercase tracking-wider transition-colors duration-200"
+                >
+                  Join as Pioneer
+                </a>
+              </div>
+
+              {/* tier 3: architect */}
+              <div className="p-6 md:p-8 bg-black/40 border border-white/10 backdrop-blur-md flex flex-col justify-between hover:border-white/25 transition-all duration-300">
+                <div>
+                  <div className="font-mono text-xs tracking-wider text-white/50 uppercase mb-1">
+                    TIER 03
+                  </div>
+                  <h3 className="font-[family-name:var(--font-outfit)] text-xl font-medium text-white mb-2">
+                    Architect
+                  </h3>
+                  <div className="text-2xl font-light text-white mb-6">
+                    $35<span className="text-xs text-white/50 font-normal"> / month</span>
+                  </div>
+                  <ul className="space-y-3 mb-8 text-xs font-light text-white/70">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>All Pioneer benefits included</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Direct 1-on-1 developer channels</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Custom scene wallpaper featured in studio</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                      <span>Source binary format documentation</span>
+                    </li>
+                  </ul>
+                </div>
+                <a
+                  href="https://patreon.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full text-center py-3 border border-white/20 hover:border-white/60 text-white font-[family-name:var(--font-outfit)] text-xs uppercase tracking-wider transition-colors duration-200"
+                >
+                  Join as Architect
+                </a>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* initial loading indicator overlay while textures and geometries parse */}
         {!isEngineReady && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#050c18] text-white">
             <div className="relative w-16 h-16 mb-6">
-              <div className="absolute inset-0 rounded-full border-2 border-white/10 border-t-amber-400 animate-spin" />
-              <div className="absolute inset-2 rounded-full border-2 border-white/10 border-b-orange-400 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+              <div className="absolute inset-0 rounded-full border-2 border-white/10 border-t-white/80 animate-spin" />
+              <div className="absolute inset-2 rounded-full border-2 border-white/10 border-b-white/50 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
             </div>
             <div className="text-xs font-mono tracking-[0.25em] text-white/70 uppercase">
-              COMPILING ASSETS
+              COMPILING 3D SCENE
             </div>
           </div>
         )}

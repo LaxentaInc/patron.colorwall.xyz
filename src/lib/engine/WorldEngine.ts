@@ -1,8 +1,10 @@
 import * as THREE from "three";
 import { BufLoader } from "./BufLoader";
 import { Scene1 } from "./Scene1";
+import { LineTrails } from "./LineTrails";
+import { Scene3 } from "./Scene3";
 
-// primary 3d world engine coordinator handling rendering, camera motion, and scene transitions
+// primary 3d world engine coordinator handling multi-scene continuum and transitions
 export class WorldEngine {
   public renderer: THREE.WebGLRenderer;
   public camera: THREE.PerspectiveCamera;
@@ -11,6 +13,8 @@ export class WorldEngine {
   private loader: BufLoader;
   private textureLoader: THREE.TextureLoader;
   public scene1: Scene1;
+  public lineTrails: LineTrails;
+  public scene3: Scene3;
 
   private isRunning = false;
   private rafId: number | null = null;
@@ -28,7 +32,7 @@ export class WorldEngine {
   private currentMouseY = 0;
   private mouseDamp = 0.05;
 
-  // temporary math structures for camera animation calculation
+  // temporary math structures for camera animation and transitions
   private camPos0 = new THREE.Vector3();
   private camPos1 = new THREE.Vector3();
   private camQuat0 = new THREE.Quaternion();
@@ -37,7 +41,7 @@ export class WorldEngine {
   private mouseEuler = new THREE.Euler(0, 0, 0, "YXZ");
 
   constructor(public canvas: HTMLCanvasElement) {
-    // initialize WebGL renderer with high color fidelity
+    // initialize webgl renderer with srgb color pipeline
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
@@ -50,28 +54,43 @@ export class WorldEngine {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
 
-    // initialize camera
+    // initialize perspective camera
     this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 10, 4000);
     this.camera.position.set(0, 150, 800);
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("#050c18");
 
-    // instantiate loaders and scenes
+    // instantiate loaders and sub-scene coordinators
     this.loader = new BufLoader();
     this.textureLoader = new THREE.TextureLoader();
+
     this.scene1 = new Scene1(this.loader, this.textureLoader);
+    this.lineTrails = new LineTrails(this.loader, this.textureLoader);
+    this.scene3 = new Scene3(this.loader, this.textureLoader);
+
     this.scene.add(this.scene1.container);
+    this.scene.add(this.lineTrails.container);
+    this.scene.add(this.scene3.container);
+
+    // hide subsequent scenes initially until active
+    this.lineTrails.container.visible = false;
+    this.scene3.container.visible = false;
   }
 
-  // boots the engine and loads all 3d scenes asynchronously
+  // boots all scene assets concurrently and starts the render loop
   public async init(): Promise<void> {
-    await this.scene1.load();
+    await Promise.all([
+      this.scene1.load(),
+      this.lineTrails.load(),
+      this.scene3.load(),
+    ]);
+
     this.onResize();
     this.start();
   }
 
-  // starts the requestAnimationFrame animation loop
+  // starts the requestanimationframe loop
   public start(): void {
     if (this.isRunning) return;
     this.isRunning = true;
@@ -87,7 +106,7 @@ export class WorldEngine {
     this.rafId = requestAnimationFrame(loop);
   }
 
-  // stops the animation loop
+  // stops the render loop when canvas is off-screen
   public stop(): void {
     this.isRunning = false;
     if (this.rafId !== null) {
@@ -96,33 +115,73 @@ export class WorldEngine {
     }
   }
 
-  // updates scroll, camera trajectory, mouse parallax, and scene elements
+  // updates scroll, camera trajectory, ribbon physics, and scene managers
   private update(): void {
     const deltaTime = Math.min(this.clock.getDelta(), 0.1);
     const elapsedTime = this.clock.getElapsedTime();
 
-    // 1. smooth scroll progress interpolation (lerp)
+    // smooth scroll damping
     this.currentScroll += (this.targetScroll - this.currentScroll) * this.scrollDamp;
 
-    // 2. smooth mouse parallax look-at damping
+    // smooth mouse parallax damping
     this.currentMouseX += (this.targetMouseX - this.currentMouseX) * this.mouseDamp;
     this.currentMouseY += (this.targetMouseY - this.currentMouseY) * this.mouseDamp;
 
-    // 3. update camera position and orientation from keyframes or parametric fallback
-    this.updateCamera(this.currentScroll);
-
-    // 4. update scene 1 elements (bird, sky, mountains, fog, title)
-    this.scene1.update(elapsedTime, deltaTime, this.currentScroll, this.camera);
-  }
-
-  // updates camera position from sc_01_camera trajectory or smooth fallback
-  private updateCamera(scrollProgress: number): void {
-    const keyframes = this.scene1.cameraKeyframes;
+    const scroll = this.currentScroll;
     const isMobile = this.camera.aspect < 1.0;
 
+    // phase 1: scene 1 mountain passage (0.0 to 0.50)
+    if (scroll < 0.50) {
+      const p1 = Math.max(0, Math.min(1, scroll / 0.50));
+      this.scene1.container.visible = true;
+      this.lineTrails.container.visible = false;
+      this.scene3.container.visible = false;
+
+      this.updateScene1Camera(p1, isMobile);
+      this.scene1.update(elapsedTime, deltaTime, p1, this.camera);
+    }
+    // phase 2: samsy lineengine ribbon warp transition (0.50 to 0.65)
+    else if (scroll >= 0.50 && scroll < 0.65) {
+      const warpT = (scroll - 0.50) / 0.15;
+      const smoothWarp = warpT * warpT * (3.0 - 2.0 * warpT);
+
+      this.scene1.container.visible = warpT < 0.75;
+      this.lineTrails.container.visible = true;
+      this.scene3.container.visible = warpT > 0.25;
+
+      // ribbon luminous pulse curve
+      const ribbonOpacity = Math.sin(warpT * Math.PI) * 1.2;
+      this.lineTrails.update(elapsedTime, Math.min(1, ribbonOpacity));
+
+      // update scene 1 at end state and scene 3 at initial state
+      this.scene1.update(elapsedTime, deltaTime, 1.0, this.camera);
+      this.scene3.update(elapsedTime, 0.0, this.camera, isMobile);
+
+      // interpolate camera from scene 1 terminus to scene 3 lake entrance
+      this.updateWarpCamera(smoothWarp);
+    }
+    // phase 3: scene 3 lake sanctuary and water simulation (0.65 to 1.0)
+    else {
+      const p3 = Math.max(0, Math.min(1, (scroll - 0.65) / 0.35));
+      this.scene1.container.visible = false;
+      this.lineTrails.container.visible = false;
+      this.scene3.container.visible = true;
+
+      this.scene3.update(elapsedTime, p3, this.camera, isMobile);
+    }
+
+    // apply subtle mouse parallax tilt on top of active camera orientation
+    const maxLookAngle = 0.06;
+    this.mouseEuler.set(this.currentMouseY * maxLookAngle, -this.currentMouseX * maxLookAngle, 0);
+    this.mouseQuat.setFromEuler(this.mouseEuler);
+    this.camera.quaternion.multiply(this.mouseQuat);
+  }
+
+  // updates camera position from sc_01_camera trajectory
+  private updateScene1Camera(progress: number, isMobile: boolean): void {
+    const keyframes = this.scene1.cameraKeyframes;
     if (keyframes.positions && keyframes.orientations && keyframes.count > 0) {
-      // sample camera path keyframes along scroll progress
-      const keyframeFloat = THREE.MathUtils.clamp(scrollProgress, 0, 1) * (keyframes.count - 1);
+      const keyframeFloat = progress * (keyframes.count - 1);
       const k0 = Math.floor(keyframeFloat);
       const k1 = Math.min(k0 + 1, keyframes.count - 1);
       const alpha = keyframeFloat - k0;
@@ -135,13 +194,11 @@ export class WorldEngine {
       this.camQuat1.fromArray(keyframes.orientations, k1 * 4);
       this.camera.quaternion.slerpQuaternions(this.camQuat0, this.camQuat1, alpha);
 
-      // apply focal length if available
       const focalArray = isMobile && keyframes.mobileFocal ? keyframes.mobileFocal : keyframes.focal;
       if (focalArray) {
         const f0 = focalArray[k0];
         const f1 = focalArray[k1];
         const focal = THREE.MathUtils.lerp(f0, f1, alpha);
-        // focal to vertical fov conversion
         const aperture = 41.42;
         const apy = (window.innerHeight * aperture) / window.innerWidth;
         const computedFov = 2 * Math.atan(apy / 2 / focal) * (180 / Math.PI);
@@ -150,23 +207,44 @@ export class WorldEngine {
           this.camera.updateProjectionMatrix();
         }
       }
-    } else {
-      // parametric cinematic fallback camera dolly
-      const targetZ = THREE.MathUtils.lerp(900, -200, scrollProgress);
-      const targetY = THREE.MathUtils.lerp(180, 40, scrollProgress);
-      const targetX = Math.sin(scrollProgress * Math.PI) * 120;
-      this.camera.position.set(targetX, targetY, targetZ);
-      this.camera.lookAt(0, 100, -500);
     }
-
-    // apply subtle mouse parallax tilt on top of the camera orientation
-    const maxLookAngle = 0.08;
-    this.mouseEuler.set(this.currentMouseY * maxLookAngle, -this.currentMouseX * maxLookAngle, 0);
-    this.mouseQuat.setFromEuler(this.mouseEuler);
-    this.camera.quaternion.multiply(this.mouseQuat);
   }
 
-  // renders the 3d scene with the active camera
+  // interpolates camera during lineengine ribbon warp between scene 1 end and scene 3 start
+  private updateWarpCamera(ratio: number): void {
+    const k1 = this.scene1.cameraKeyframes;
+    const k3 = this.scene3.cameraKeyframes;
+
+    if (k1.positions && k3.positions && k1.count > 0 && k3.count > 0) {
+      const end1Idx = (k1.count - 1) * 3;
+      const end1QuatIdx = (k1.count - 1) * 4;
+
+      this.camPos0.set(k1.positions[end1Idx], k1.positions[end1Idx + 1], k1.positions[end1Idx + 2]);
+      this.camPos1.set(k3.positions[0], k3.positions[1], k3.positions[2]);
+
+      // add parabolic elevation arc so the camera flies up through ribbons before descending into lake
+      this.camera.position.lerpVectors(this.camPos0, this.camPos1, ratio);
+      this.camera.position.y += Math.sin(ratio * Math.PI) * 120.0;
+
+      this.camQuat0.set(k1.orientations![end1QuatIdx], k1.orientations![end1QuatIdx + 1], k1.orientations![end1QuatIdx + 2], k1.orientations![end1QuatIdx + 3]);
+      this.camQuat1.set(k3.orientations![0], k3.orientations![1], k3.orientations![2], k3.orientations![3]);
+
+      this.camera.quaternion.slerpQuaternions(this.camQuat0, this.camQuat1, ratio);
+    }
+  }
+
+  // smoothly warps camera from current position through ribbons into lake sanctuary
+  public warpToLake(): void {
+    if (typeof window === "undefined") return;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const targetScrollY = docHeight * 0.85;
+    window.scrollTo({
+      top: targetScrollY,
+      behavior: "smooth",
+    });
+  }
+
+  // renders active 3d scene
   private render(): void {
     this.renderer.render(this.scene, this.camera);
   }

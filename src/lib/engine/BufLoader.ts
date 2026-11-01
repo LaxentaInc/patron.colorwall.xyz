@@ -95,9 +95,10 @@ export class BufLoader {
       const totalElements = count * attr.componentSize;
       const TypedArrayConstructor = BufLoader.typedArrayMap[attr.storageType] || Float32Array;
 
-      // create a view over the raw binary slice
-      const rawView = new TypedArrayConstructor(buffer, byteOffset, totalElements);
+      // create a view over the raw binary slice using cloned buffer slice to prevent alignment exceptions
       const bytesPerElement = TypedArrayConstructor.BYTES_PER_ELEMENT;
+      const rawSlice = buffer.slice(byteOffset, byteOffset + totalElements * bytesPerElement);
+      const rawView = new TypedArrayConstructor(rawSlice);
 
       let finalArray: ArrayLike<number> = rawView;
 
