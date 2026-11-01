@@ -254,25 +254,25 @@ export function WorldExperience() {
               </p>
 
               <div className="mb-6">
-                <div className="text-[11px] font-mono tracking-wider text-white/45 mb-2.5 uppercase">
-                  We will thank you with
+                <div className="text-[11px] font-mono tracking-wider text-white/45 mb-2.5">
+                  We will thank you with:
                 </div>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-light text-neutral-200">
                   <li className="flex items-center gap-2.5">
                     <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                    <span>Discounts on all Colorwall products</span>
+                    <span>Discounts on all Colorwall products, Well upcoming ones; It's still in development.</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                    <span>Private Minecraft server access</span>
+                    <span>Upcoming Community Minecraft server access! Early too!</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                    <span>Browser &amp; wallpaper memberships</span>
+                    <span>Browser Extension &amp; in app plugin/creator memberships</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                    <span className="text-white font-medium">Coolest Backer Discord role</span>
+                    <span className="text-white font-medium">Coolest Discord role and lots of love too!</span>
                   </li>
                 </ul>
               </div>
