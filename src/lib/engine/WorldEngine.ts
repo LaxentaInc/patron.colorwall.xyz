@@ -68,7 +68,7 @@ export class WorldEngine {
     this.textureLoader = new THREE.TextureLoader();
 
     this.scene1 = new Scene1(this.loader, this.textureLoader);
-    this.scene2 = new Scene2(this.loader, this.textureLoader);
+    this.scene2 = new Scene2(this.textureLoader);
     this.lineTrails = new LineTrails(this.loader, this.textureLoader);
     this.scene3 = new Scene3(this.loader, this.textureLoader);
 
@@ -97,6 +97,9 @@ export class WorldEngine {
       this.scene1.birdMesh.parent.remove(this.scene1.birdMesh);
       this.scene.add(this.scene1.birdMesh);
     }
+
+    // pre-compile all scene materials on the gpu upfront during the load screen to eliminate scroll lag
+    this.renderer.compile(this.scene, this.camera);
 
     this.onResize();
     this.start();

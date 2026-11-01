@@ -144,7 +144,7 @@ export function WorldExperience() {
               {scrollPercent < 0.35
                 ? `ALTITUDE ${Math.round(150 + (scrollPercent / 0.35) * 650)}M`
                 : scrollPercent < 0.70
-                ? `STRATOSPHERE // ${Math.round(1200 + ((scrollPercent - 0.35) / 0.35) * 2400)}M`
+                ? `ALTITUDE // ${Math.round(450 + ((scrollPercent - 0.35) / 0.35) * 650)}M`
                 : `ALTITUDE 22M // LAKE LEVEL`}
             </div>
           </div>
@@ -209,14 +209,14 @@ export function WorldExperience() {
             }}
             transition={{ duration: 0.5 }}
           >
-            <div className="font-mono text-xs tracking-[0.3em] text-white/50 uppercase mb-2">
-              THE FLOATING EXPANSE
-            </div>
+            {/* <div className="font-mono text-xs tracking-[0.3em] text-white/50 uppercase mb-2">
+              THE UPPER EXPANSION
+            </div> */}
             <h2 className="font-[family-name:var(--font-outfit)] text-2xl md:text-4xl font-extralight text-white tracking-tight mb-2">
-              Suspended in Light
+              Sky's the Limit
             </h2>
             <p className="font-[family-name:var(--font-outfit)] text-sm md:text-base text-white/60 font-light leading-relaxed">
-              Floating monoliths suspended above the clouds, carrying procedural composite shaders and living neon flora through the skies.
+             We welcome everyone who want's to be a patron, or just appretiates the work, Oi Oi &lt;3 we whole heartedly thank you!!
             </p>
           </motion.div>
 
