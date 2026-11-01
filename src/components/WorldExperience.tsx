@@ -139,11 +139,9 @@ export function WorldExperience() {
           className="absolute inset-0 w-full h-full block touch-none pointer-events-auto"
         />
 
-        {/* top navigation bar */}
         <header className="fixed top-6 left-6 right-6 z-40 flex items-center justify-between pointer-events-none">
           <div />
 
-          {/* right controls: audio ambiance and clean unboxed hud telemetry */}
           <div className="flex items-center gap-5 pointer-events-auto">
             <button
               onClick={toggleAudio}
@@ -153,20 +151,17 @@ export function WorldExperience() {
               {isAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-white" />}
             </button>
 
-            {/* dynamic unboxed telemetry displaying altitude across all 3 phases */}
             <div className="font-mono text-xs tracking-[0.25em] text-white/60 select-none">
               {scrollPercent < 0.35
                 ? `ALTITUDE ${Math.round(150 + (scrollPercent / 0.35) * 650)}M`
                 : scrollPercent < 0.70
-                ? `ALTITUDE // ${Math.round(450 + ((scrollPercent - 0.35) / 0.35) * 650)}M`
-                : `ALTITUDE 22M // LAKE LEVEL`}
+                ? `ALTITUDE ${Math.round(450 + ((scrollPercent - 0.35) / 0.35) * 650)}M`
+                : `ALTITUDE 22M; LAKE LEVEL`}
             </div>
           </div>
         </header>
 
-        {/* cinematic chapter overlays synchronized with scroll progress */}
         <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-6 md:p-16">
-          {/* chapter 1: the team intro */}
           <motion.div
             className="absolute top-1/3 right-6 md:right-24 max-w-lg text-right"
             initial={{ opacity: 0, y: 20 }}
@@ -184,7 +179,6 @@ export function WorldExperience() {
             </p>
           </motion.div>
 
-          {/* chapter 2: mountain pass climax and patron warp trigger */}
           <motion.div
             className="absolute flex flex-col items-center justify-center text-center max-w-2xl"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -213,7 +207,6 @@ export function WorldExperience() {
             </div>
           </motion.div>
 
-          {/* chapter 3: floating island expanse in stratosphere */}
           <motion.div
             className="absolute bottom-24 left-6 md:left-24 max-w-md text-left"
             initial={{ opacity: 0, y: 20 }}
@@ -234,7 +227,6 @@ export function WorldExperience() {
             </p>
           </motion.div>
 
-          {/* phase 3: lake sanctuary patron tiers overlay */}
           <motion.div
             className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-12 text-center"
             initial={{ opacity: 0, y: 30 }}
@@ -245,10 +237,10 @@ export function WorldExperience() {
             }}
             transition={{ duration: 0.6 }}
           >
-            {/* funny team header section preserved with original copy */}
+            {/* why was this in caps? */}
             <div className="max-w-3xl mx-auto mb-6 text-center">
               <h2 className="font-[family-name:var(--font-outfit)] text-2xl md:text-3xl font-light text-white tracking-tight mb-2">
-                The Laxenta team (IT&apos;S JUST ME)
+                The Laxenta team (it&apos;s just me)
               </h2>
               <p className="font-[family-name:var(--font-outfit)] text-xs md:text-sm text-white/60 font-light max-w-lg mx-auto">
                 Directly fuel independent programming, opensource projects, runtime upgrades of colorwall and it&apos;s sister products, and aura of the developer too.
@@ -258,22 +250,17 @@ export function WorldExperience() {
               </p>
             </div>
 
-            {/* moody dark glass card resting over the lake sanctuary */}
             <div className="max-w-xl w-full bg-black/75 border border-white/15 backdrop-blur-xl p-7 sm:p-9 text-left shadow-[0_24px_64px_rgba(0,0,0,0.9)] relative z-20 pointer-events-auto">
               <div className="flex items-baseline justify-between gap-4 mb-2">
                 <h3 className="font-[family-name:var(--font-bilbo)] text-4xl sm:text-5xl text-white tracking-wide">
                   Buy us a Coffee &lt;3
                 </h3>
-                <span className="font-mono text-[10px] tracking-widest text-white/40 uppercase">
-                  Independent Backer
-                </span>
               </div>
 
               <p className="font-[family-name:var(--font-outfit)] text-xs sm:text-sm text-neutral-300 font-light leading-relaxed mb-6">
                 Contribute whatever you want, anything you do will always help the development.
               </p>
 
-              {/* perks checklist */}
               <div className="mb-6">
                 <div className="text-[11px] font-mono tracking-wider text-white/45 mb-2.5 uppercase">
                   We will thank you with
