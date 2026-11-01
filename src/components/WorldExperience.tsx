@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useScroll, useMotionValueEvent, motion } from "framer-motion";
 import { WorldEngine } from "@/lib/engine/WorldEngine";
-import { Volume2, VolumeX, Sparkles, Check, Copy } from "lucide-react";
+import { Volume2, VolumeX, Sparkles, Check, Copy, X } from "lucide-react";
 
 // constant defining the liquid network wallet address for supporter contributions
 const LIQUID_ADDRESS = "lq1qqwtc98th06ulteyzkegdu8rtyetmrrlcxakml0qtcqgpq3f2tq5j0t0vpx3au2wnpkrthtre4alqlt7z0dc9z0zj0an7wwezt";
@@ -245,167 +245,177 @@ export function WorldExperience() {
             }}
             transition={{ duration: 0.6 }}
           >
-            {/* funny heading section restored with full original text */}
-            <div className="max-w-3xl mx-auto mb-8 text-center">
-              <div className="font-mono text-xs tracking-[0.3em] text-white/50 uppercase mb-2">
-                THE LAXENTA TEAM (IT&apos;S JUST ME).
-              </div>
-              <h2 className="font-[family-name:var(--font-outfit)] text-3xl md:text-5xl font-light text-white tracking-tight mb-3">
-                Shape The Foundation
+            {/* funny team header section preserved with original copy */}
+            <div className="max-w-3xl mx-auto mb-6 text-center">
+              <h2 className="font-[family-name:var(--font-outfit)] text-2xl md:text-3xl font-light text-white tracking-tight mb-2">
+                The Laxenta team (IT&apos;S JUST ME)
               </h2>
-              <p className="font-[family-name:var(--font-outfit)] text-sm md:text-base text-white/60 font-light max-w-xl mx-auto">
+              <p className="font-[family-name:var(--font-outfit)] text-xs md:text-sm text-white/60 font-light max-w-lg mx-auto">
                 Directly fuel independent programming, opensource projects, runtime upgrades of colorwall and it&apos;s sister products, and aura of the developer too.
               </p>
-              <p className="text-sm md:text-base text-white/60 font-light mt-1">
+              <p className="text-xs md:text-sm text-white/60 font-light mt-1">
                 All at once, You are this cool.
               </p>
             </div>
 
-            {/* single sharp supporter card with liquid crypto qr and three step guide */}
-            <div className="max-w-4xl w-full bg-black/60 border border-white/20 backdrop-blur-xl p-6 sm:p-8 md:p-10 text-left shadow-[0_24px_64px_rgba(0,0,0,0.85)] relative z-20">
-              <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-                
-                {/* left column hosting the vector qr code and official liquid network badge */}
-                <div className="flex flex-col items-center shrink-0 w-full md:w-52">
-                  <div className="p-3 bg-white shadow-inner">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/assets/crypto/liquid_qr.svg"
-                      alt="Liquid Bitcoin Receive QR"
-                      width={170}
-                      height={170}
-                      className="w-40 h-40 md:w-44 md:h-44 block"
-                    />
-                  </div>
-                  
-                  {/* authentic liquid network badge with teardrop icon matching the wallet */}
-                  <div className="w-full mt-3 p-2 bg-white/5 border border-white/10 flex items-center gap-2.5">
-                    <svg className="w-5 h-5 text-[#26c6da] shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2.5C12 2.5 5.5 10.5 5.5 15C5.5 18.59 8.41 21.5 12 21.5C15.59 21.5 18.5 18.59 18.5 15C18.5 10.5 12 2.5 12 2.5ZM11.2 7.8H12.8V9.2C13.8 9.3 14.5 9.9 14.5 10.8C14.5 11.5 14 12.1 13.2 12.3V12.4C14.2 12.6 14.8 13.3 14.8 14.2C14.8 15.3 13.9 16 12.8 16.1V17.5H11.2V16.1C10.5 16 9.8 15.6 9.5 15.2L10.5 14.1C10.8 14.4 11.2 14.6 11.6 14.7V13.1C10.9 12.9 10 12.6 10 11.6C10 10.6 10.8 9.9 11.6 9.8V7.8H11.2ZM11.6 10.8C11.3 10.9 11.1 11.1 11.1 11.4C11.1 11.8 11.4 12 11.9 12.1V10.8C11.8 10.8 11.7 10.8 11.6 10.8ZM12.5 14.9C12.9 14.8 13.2 14.5 13.2 14.1C13.2 13.6 12.8 13.4 12.2 13.3V15C12.3 15 12.4 15 12.5 14.9Z" />
-                    </svg>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-mono text-[10px] tracking-wider text-white uppercase truncate">
-                        Liquid Network
-                      </div>
-                      <div className="font-mono text-[9px] text-white/40 truncate">
-                        Standard Singlesig / L-BTC
-                      </div>
-                    </div>
-                  </div>
+            {/* moody dark glass card resting over the lake sanctuary */}
+            <div className="max-w-xl w-full bg-black/75 border border-white/15 backdrop-blur-xl p-7 sm:p-9 text-left shadow-[0_24px_64px_rgba(0,0,0,0.9)] relative z-20 pointer-events-auto">
+              <div className="flex items-baseline justify-between gap-4 mb-2">
+                <h3 className="font-[family-name:var(--font-bilbo)] text-4xl sm:text-5xl text-white tracking-wide">
+                  Buy us a Coffee &lt;3
+                </h3>
+                <span className="font-mono text-[10px] tracking-widest text-white/40 uppercase">
+                  Independent Backer
+                </span>
+              </div>
+
+              <p className="font-[family-name:var(--font-outfit)] text-xs sm:text-sm text-neutral-300 font-light leading-relaxed mb-6">
+                Contribute whatever you want, anything you do will always help the development.
+              </p>
+
+              {/* perks checklist */}
+              <div className="mb-6">
+                <div className="text-[11px] font-mono tracking-wider text-white/45 mb-2.5 uppercase">
+                  We will thank you with
                 </div>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-light text-neutral-200">
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                    <span>Discounts on all Colorwall products</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                    <span>Private Minecraft server access</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                    <span>Browser &amp; wallpaper memberships</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                    <span className="text-white font-medium">Coolest Backer Discord role</span>
+                  </li>
+                </ul>
+              </div>
 
-                {/* right column with min width zero to eliminate flex overflow */}
-                <div className="flex-1 min-w-0 w-full flex flex-col justify-between">
-                  <div>
-                    {/* <div className="font-mono text-xs tracking-widest text-white/50 uppercase mb-1">
-                      Buy Us A Coffee // One-Time Supporter
-                    </div> */}
-                    <h3 className="font-[family-name:var(--font-outfit)] text-xl md:text-2xl font-medium text-white mb-2">
-                      Buy us a Coffee &lt;3 
-                    </h3>
-                    <p className="font-[family-name:var(--font-outfit)] text-xs md:text-sm text-white/70 font-light leading-relaxed mb-4">
-                      Contribute whatever you want, anything you do will always help the development.
-                    </p>
+              {/* action buttons row */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                {/* buy me a coffee trigger button opening the bitcoin liquid modal */}
+                <button
+                  type="button"
+                  onClick={() => setIsWalletModalOpen(true)}
+                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-2.5 py-3 px-5 bg-white text-black hover:bg-neutral-200 active:scale-95 font-[family-name:var(--font-outfit)] text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md"
+                >
+                  <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M20.216 6.415l-.132-.666c-.119-.597-.384-1.144-1.042-1.282-1.054-.22-2.115-.43-3.178-.636-.582-.113-1.129.284-1.242.866l-.132.666 5.726 1.052zm-14.71 8.877c-1.002 0-1.815-.813-1.815-1.815s.813-1.815 1.815-1.815 1.815.813 1.815 1.815-.813 1.815-1.815 1.815zm16.516-5.748l-.348-1.748c-.287-1.442-1.488-2.457-2.955-2.738-1.637-.313-3.29-.619-4.945-.916-1.579-.283-3.084.776-3.367 2.355l-.348 1.748-4.228-.76c-.347-.062-.693.167-.755.514l-2.022 11.238c-.062.347.167.693.514.755l14.39 2.585c.347.062.693-.167.755-.514l2.022-11.238c.062-.347-.167-.693-.514-.755l-2.848-.512zm-3.83 5.485c-.062.347-.408.576-.755.514l-5.694-1.023c-.347-.062-.576-.408-.514-.755l.897-4.985c.062-.347.408-.576.755-.514l5.694 1.023c.347.062.576.408.514.755l-.897 4.985z"/>
+                  </svg>
+                  <span>Buy Us A Coffee</span>
+                </button>
 
-                    {/* clear three step guide */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
-                      <div className="p-2.5 bg-white/5 border border-white/10">
-                        <div className="font-mono text-[10px] text-white/40 uppercase mb-0.5">Step 01</div>
-                        <div className="font-[family-name:var(--font-outfit)] text-xs text-white font-medium mb-1">Scan or Copy</div>
-                        <div className="text-[11px] text-white/60 font-light leading-snug">
-                          Use Aqua, Blockstream, Electrum, Green, Marina, or SideSwap wallet to scan the QR.
-                        </div>
-                      </div>
-                      <div className="p-2.5 bg-white/5 border border-white/10">
-                        <div className="font-mono text-[10px] text-white/40 uppercase mb-0.5">Step 02</div>
-                        <div className="font-[family-name:var(--font-outfit)] text-xs text-white font-medium mb-1">Send Any Amount</div>
-                        <div className="text-[11px] text-white/60 font-light leading-snug">
-                          Send whatever contribution you want in L-BTC or USDt.
-                        </div>
-                      </div>
-                      {/* <div className="p-2.5 bg-white/5 border border-white/10">
-                        <div className="font-mono text-[10px] text-white/40 uppercase mb-0.5">Step 03</div>
-                        <div className="font-[family-name:var(--font-outfit)] text-xs text-white font-medium mb-1">Post on Discord</div>
-                        <div className="text-[11px] text-white/60 font-light leading-snug">
-                          Drop a screenshot of your tx or stay mysterious!
-                        </div>
-                      </div> */}
-                    </div>
+                {/* discord community redirect button */}
+                <a
+                  href="https://discord.gg/BbsGD63xNP"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-6 border border-white/20 hover:border-white/60 hover:bg-white/5 active:scale-95 text-white font-[family-name:var(--font-outfit)] text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-white/80" />
+                  <span>Join Discord</span>
+                </a>
+              </div>
 
-                    {/* perks checklist */}
-                    <div className="mb-4">
-                      <div className="text-[10px] font-mono tracking-wider text-white/40 mb-1.5">
-                        We will thank you with
-                      </div>
-                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs font-light text-white/80">
-                        <li className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                          <span>Discounts on all Colorwall products</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                          <span>Private Minecraft server access</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                          <span>Browser &amp; wallpaper memberships</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                          <span>Coolest Backer Discord role</span>
-                        </li>
-                      </ul>
-                    </div>
+              <p className="text-[11px] text-white/40 font-light text-center mt-4">
+                Post your transaction in our Discord to claim your perks or stay mysterious!
+              </p>
+            </div>
 
-                    {/* copy address field with flex containment */}
-                    <div className="mb-4">
-                      <div className="text-[10px] font-mono tracking-wider text-white/40 uppercase mb-1">
-                        Liquid Account Address
-                      </div>
-                      <div className="flex items-center gap-2 p-2 bg-black/50 border border-white/15 min-w-0">
-                        <span className="font-mono text-[11px] text-white/80 truncate min-w-0 flex-1 select-all">
-                          {LIQUID_ADDRESS}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={handleCopyAddress}
-                          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white font-mono text-xs tracking-wider transition-all cursor-pointer"
-                          title="Copy Liquid Address"
-                        >
-                          {copiedAddress ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-white" />
-                              <span className="text-white font-semibold">Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+            {/* atmospheric obsidian liquid crypto modal popping over the viewport */}
+            {isWalletModalOpen && (
+              <div 
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md pointer-events-auto"
+                onClick={() => setIsWalletModalOpen(false)}
+              >
+                <div 
+                  className="relative w-full max-w-md bg-[#0a0a0d] border border-white/20 p-6 sm:p-8 text-left shadow-[0_32px_80px_rgba(0,0,0,0.95)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* dismiss button closing the modal */}
+                  <button
+                    type="button"
+                    onClick={() => setIsWalletModalOpen(false)}
+                    className="absolute top-4 right-4 p-1.5 text-white/40 hover:text-white transition-colors cursor-pointer"
+                    title="Close Modal"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  
+                  <p className="font-[family-name:var(--font-outfit)] text-xs text-neutral-400 font-light mb-5 leading-relaxed">
+                    Scan using Aqua, Blockstream Green, Marina, or SideSwap. Any amount of L-BTC or USDt is welcomed.
+                  </p>
+
+                  {/* qr code container */}
+                  <div className="flex flex-col items-center mb-5">
+                    <div className="p-3 bg-white shadow-md">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/assets/crypto/liquid_qr.svg"
+                        alt="Liquid Bitcoin Receive QR"
+                        width={170}
+                        height={170}
+                        className="w-40 h-40 sm:w-44 sm:h-44 block"
+                      />
                     </div>
                   </div>
 
-                  {/* bottom action row with discord redirect */}
-                  <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  {/* interactive address field with clipboard feedback */}
+                  <div className="mb-5">
+                    <div className="text-[10px] font-mono tracking-wider text-white/40 mb-1">
+                      Liquid Account Address
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-black/80 border border-white/15 min-w-0">
+                      <span className="font-mono text-[11px] text-white/80 truncate min-w-0 flex-1 select-all">
+                        {LIQUID_ADDRESS}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCopyAddress}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white font-mono text-xs tracking-wider transition-all cursor-pointer border border-white/10"
+                        title="Copy Liquid Address"
+                      >
+                        {copiedAddress ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-white" />
+                            <span className="text-white font-semibold">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-neutral-300" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* proof note and discord action */}
+                  {/* <div className="justify-center pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p className="text-[11px] text-white/50 font-light text-center sm:text-left leading-tight">
-                      Post your transaction in our Discord to claim your perks or stay mysterious!
+                      Drop transaction proof in Discord to get your roles &amp; perks!
                     </p>
                     <a
                       href="https://discord.gg/BbsGD63xNP"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-2.5 bg-white text-black hover:bg-neutral-200 active:scale-95 font-[family-name:var(--font-outfit)] text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md shrink-0"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-black hover:bg-neutral-200 active:scale-95 font-[family-name:var(--font-outfit)] text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md shrink-0"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-black" />
-                      <span>Join Discord</span>
+                      <span>Discord</span>
                     </a>
-                  </div>
+                  </div> */}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* commented out legacy three-tier subscription plans preserved for reference */}
             {/*
