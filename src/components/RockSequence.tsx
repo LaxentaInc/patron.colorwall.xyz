@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useScroll, useMotionValueEvent, useTransform, motion } from "framer-motion";
-import Link from "next/link";
 import { SpaceDust } from "./SpaceDust";
-import Textplosion, { TextplosionHandle } from "./Textplosion";
 
 const FRAME_COUNT = 270;
 
@@ -15,12 +13,6 @@ export function RockSequence() {
   const targetFrameRef = useRef(1);
   const currentFrameRef = useRef(1);
   const [imagesLoaded, setImagesLoaded] = useState(0);
-
-  // refs for imperatively driving the textplosion explosion progress
-  // from scroll without triggering react re-renders every frame
-  const text1Ref = useRef<TextplosionHandle>(null);
-  const text2Ref = useRef<TextplosionHandle>(null);
-  const text3Ref = useRef<TextplosionHandle>(null);
 
   const renderFrame = (index: number) => {
     const img = imagesRef.current[index];
@@ -95,32 +87,21 @@ export function RockSequence() {
     targetFrameRef.current = Math.max(1, Math.min(FRAME_COUNT, Math.ceil(latest * FRAME_COUNT)));
   });
 
-  // text phase 1 - early scroll
+  // text phase 1 early scroll opacity and vertical translation
   const opacity1 = useTransform(scrollYProgress, [0.00, 0.10, 0.20, 0.28], [0, 1, 1, 0]);
-  const y1 = useTransform(scrollYProgress, [0.00, 0.28], [50, -50]);
-  // explosion progress: 1 = smoke, 0 = solid.
-  // scroll down: text assembles slowly from smoke (1->0), then disperses (0->1)
-  const explode1 = useTransform(scrollYProgress, [0.00, 0.10, 0.20, 0.28], [1, 0, 0, 1]);
+  const y1 = useTransform(scrollYProgress, [0.00, 0.28], [40, -40]);
 
-  // text phase 2 - mid scroll
+  // text phase 2 mid scroll opacity and vertical translation
   const opacity2 = useTransform(scrollYProgress, [0.32, 0.42, 0.52, 0.60], [0, 1, 1, 0]);
-  const y2 = useTransform(scrollYProgress, [0.32, 0.60], [50, -50]);
-  const explode2 = useTransform(scrollYProgress, [0.32, 0.42, 0.52, 0.60], [1, 0, 0, 1]);
+  const y2 = useTransform(scrollYProgress, [0.32, 0.60], [40, -40]);
 
-  // text phase 3 - late scroll (persists during late scroll, dissolves before 3d world entry)
+  // text phase 3 late scroll opacity and vertical translation
   const opacity3 = useTransform(scrollYProgress, [0.64, 0.74, 0.90, 0.98], [0, 1, 1, 0]);
-  const y3 = useTransform(scrollYProgress, [0.64, 0.90, 1.00], [50, 0, -40]);
-  const explode3 = useTransform(scrollYProgress, [0.64, 0.74, 0.90, 0.98], [1, 0, 0, 1]);
+  const y3 = useTransform(scrollYProgress, [0.64, 0.90, 1.00], [40, 0, -30]);
 
   // rock canvas tail fade and scale-up transition into 3d cosmos
   const canvasOpacity = useTransform(scrollYProgress, [0.93, 0.99], [1, 0]);
   const canvasScale = useTransform(scrollYProgress, [0.93, 0.99], [1, 1.08]);
-
-  // wire the explosion progress to each textplosion ref imperatively.
-  // this avoids re-rendering the component on every scroll tick.
-  useMotionValueEvent(explode1, "change", (v) => text1Ref.current?.setProgress(v));
-  useMotionValueEvent(explode2, "change", (v) => text2Ref.current?.setProgress(v));
-  useMotionValueEvent(explode3, "change", (v) => text3Ref.current?.setProgress(v));
 
   // custom smoothing loop inspired by FluidGalleryEngine.ts
   useEffect(() => {
@@ -184,57 +165,37 @@ export function RockSequence() {
           />
         </motion.div>
 
-        {/* Text Overlays - left-aligned, overflow visible so explosions aren't clipped */}
-        <div className="absolute inset-0 z-20 pointer-events-none flex flex-col items-start justify-center px-12 lg:px-40" style={{ overflow: 'visible' }}>
+        {/* editorial text overlays distributed across both sides of the screen */}
+        <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center p-6 md:p-14 lg:p-24 overflow-hidden">
           
-          {/* Phase 1 */}
+          {/* phase 1: early scroll positioned on the left side of the rotating rock */}
           <motion.div 
-            className="absolute w-full max-w-4xl text-left"
-            style={{ opacity: opacity1, y: y1, overflow: 'visible' }}
+            className="absolute left-6 md:left-14 lg:left-24 max-w-md lg:max-w-xl text-left"
+            style={{ opacity: opacity1, y: y1 }}
           >
-            <div className="w-full h-[120px] pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text1Ref} text="BEYOND THE DESKTOP" size={80} align="left" />
-            </div>
-            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl">
+            <p className="font-[family-name:var(--font-outfit)] text-xl sm:text-2xl md:text-3xl lg:text-[2.2rem] font-extralight text-white/90 leading-relaxed tracking-tight">
               Colorwall isn't just software. It's a living, breathing canvas that redefines your digital environment. Become a Patron and help us build the ultimate Wallpaper Engine alternative.
             </p>
           </motion.div>
 
-          {/* Phase 2 */}
+          {/* phase 2: mid scroll positioned on the right side of the rotating rock */}
           <motion.div 
-            className="absolute w-full max-w-4xl text-left"
-            style={{ opacity: opacity2, y: y2, overflow: 'visible' }}
+            className="absolute right-6 md:right-14 lg:right-24 max-w-md lg:max-w-xl text-left"
+            style={{ opacity: opacity2, y: y2 }}
           >
-            <div className="w-full h-[120px] pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text2Ref} text="SHAPE THE FOUNDATION" size={80} align="left" />
-            </div>
-            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl">
+            <p className="font-[family-name:var(--font-outfit)] text-xl sm:text-2xl md:text-3xl lg:text-[2.2rem] font-extralight text-white/90 leading-relaxed tracking-tight">
               By backing us early, you get exclusive access to beta builds, cutting-edge renderer features, and a direct line to the development team.
             </p>
           </motion.div>
 
-          {/* Phase 3 */}
+          {/* phase 3: late scroll positioned on the right side in open dark space */}
           <motion.div 
-            className="absolute w-full max-w-4xl text-left"
-            style={{ opacity: opacity3, y: y3, overflow: 'visible' }}
+            className="absolute right-6 md:right-14 lg:right-24 max-w-md lg:max-w-xl text-left"
+            style={{ opacity: opacity3, y: y3 }}
           >
-            <div className="w-full h-[120px] pointer-events-auto" style={{ overflow: 'visible' }}>
-              <Textplosion ref={text3Ref} text="BECOME PART OF THE CORE" size={80} align="left" />
-            </div>
-            <p className="font-[family-name:var(--font-outfit)] text-lg md:text-2xl text-white/60 font-light leading-relaxed max-w-xl mb-8">
+            <p className="font-[family-name:var(--font-outfit)] text-xl sm:text-2xl md:text-3xl lg:text-[2.2rem] font-extralight text-white/90 leading-relaxed tracking-tight">
               Secure your place among our earliest supporters. Unlock exclusive perks, early access drops, and have direct influence over the roadmap.
             </p>
-            
-            {/* scroll prompt commented out per user request to preserve clean continuous flow */}
-            {/*
-            <div className="flex items-center gap-3 pt-2 text-xs font-mono tracking-[0.25em] text-amber-400/80 uppercase">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>Scroll down to enter 3D World</span>
-              <svg className="w-4 h-4 text-amber-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
-            */}
           </motion.div>
 
         </div>
