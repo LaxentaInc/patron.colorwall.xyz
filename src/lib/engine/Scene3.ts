@@ -94,6 +94,9 @@ export class Scene3 {
         });
         this.landMesh = new THREE.Mesh(landGeo, landMat);
         this.landMesh.renderOrder = 3;
+        // scale and position land mesh forward so foreground terrain fills past the bottom screen edge
+        this.landMesh.scale.set(1.22, 1.22, 1.22);
+        this.landMesh.position.set(-30, -5, 60);
         this.container.add(this.landMesh);
       } catch (landErr) {
         console.warn("sc_03_land load skipped:", landErr);
@@ -122,6 +125,9 @@ export class Scene3 {
         });
         this.waterMesh = new THREE.Mesh(waterGeo, waterMat);
         this.waterMesh.renderOrder = 1;
+        // scale and position water mesh in unison with shoreline land
+        this.waterMesh.scale.set(1.22, 1.22, 1.22);
+        this.waterMesh.position.set(-30, -5, 60);
         this.container.add(this.waterMesh);
       } catch (waterErr) {
         console.warn("sc_03_water load skipped:", waterErr);
@@ -188,18 +194,23 @@ export class Scene3 {
       this.tempQ2.set(ori[index1 * 4], ori[index1 * 4 + 1], ori[index1 * 4 + 2], ori[index1 * 4 + 3]);
       camera.quaternion.slerpQuaternions(this.tempQ1, this.tempQ2, ratio);
 
-      // adapt focal length / fov if specified in trajectory buffer
+      // adapt focal length / fov if specified in trajectory buffer with tightened zoom
       const focalArr = isMobile && this.cameraKeyframes.mobileFocal ? this.cameraKeyframes.mobileFocal : this.cameraKeyframes.focal;
       if (focalArr) {
         const f0 = focalArr[index0];
         const f1 = focalArr[index1];
         const focal = f0 + (f1 - f0) * ratio;
         if (focal > 10 && focal < 150) {
-          const fov = 2 * Math.atan(24 / (2 * focal)) * (180 / Math.PI);
-          camera.fov = fov;
+          const aperture = 34.0;
+          const apy = (window.innerHeight * aperture) / window.innerWidth;
+          const fov = 2 * Math.atan(apy / 2 / focal) * (180 / Math.PI);
+          camera.fov = THREE.MathUtils.clamp(fov, 30, 52);
           camera.updateProjectionMatrix();
         }
       }
+
+      // advance camera slightly forward to ensure foreground terrain extends well past the bottom viewport edge
+      camera.translateZ(-95.0);
     }
   }
 }
