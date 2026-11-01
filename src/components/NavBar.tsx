@@ -49,9 +49,9 @@ export function NavBar() {
             <a href="https://colorwall.xyz" className="pill-button secondary text-white">
               <span className="btn-label">Main Site</span>
             </a>
-            <a href="#join" className="pill-button primary">
+            {/* <a href="#join" className="pill-button primary">
               <span className="btn-label">Get Started</span>
-            </a>
+            </a> */}
           </div>
         </div>
 

@@ -5,21 +5,30 @@ import { useScroll, useMotionValueEvent, motion } from "framer-motion";
 import { WorldEngine } from "@/lib/engine/WorldEngine";
 import { Volume2, VolumeX, Sparkles, Check, Copy, X } from "lucide-react";
 
-// constant defining the liquid network wallet address for supporter contributions
 const LIQUID_ADDRESS = "lq1qqwtc98th06ulteyzkegdu8rtyetmrrlcxakml0qtcqgpq3f2tq5j0t0vpx3au2wnpkrthtre4alqlt7z0dc9z0zj0an7wwezt";
 
-// world experience component mounting multi-scene 3d engine with floating islands and lake sanctuary
 export function WorldExperience() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<WorldEngine | null>(null);
 
   const [isEngineReady, setIsEngineReady] = useState(false);
-  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [scrollPercent, setScrollPercent] = useState(0);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // sync audio mute state with global soundtrack manager
+  useEffect(() => {
+    const handleStateChange = (e: Event) => {
+      const custom = e as CustomEvent<{ isMuted: boolean }>;
+      if (custom.detail) {
+        setIsAudioMuted(custom.detail.isMuted);
+      }
+    };
+    window.addEventListener("ambient-soundtrack-state", handleStateChange);
+    return () => window.removeEventListener("ambient-soundtrack-state", handleStateChange);
+  }, []);
 
   // helper copying liquid wallet address with user feedback timeout
   const handleCopyAddress = () => {
@@ -29,7 +38,7 @@ export function WorldExperience() {
       setTimeout(() => setCopiedAddress(false), 2500);
     }
   };
-
+ 
   // framer motion scroll progress tracker across the expanded 1400vh container
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -107,30 +116,13 @@ export function WorldExperience() {
     return () => observer.disconnect();
   }, [isEngineReady]);
 
-  // audio toggle handler
+  // audio toggle handler triggering global ambient soundtrack engine
   const toggleAudio = () => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio("/track-by-hebel.opus");
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.45;
-    }
-
-    if (isAudioMuted) {
-      audioRef.current
-        .play()
-        .then(() => setIsAudioMuted(false))
-        .catch((err) => console.warn("audio play blocked by browser:", err));
-    } else {
-      audioRef.current.pause();
-      setIsAudioMuted(true);
-    }
+    window.dispatchEvent(new CustomEvent("toggle-ambient-soundtrack"));
   };
 
   return (
     <div ref={containerRef} className="relative w-full h-[1400vh] bg-[#050c18] select-none">
-      {/* audio element holder */}
-      <audio ref={audioRef} src="/track-by-hebel.opus" preload="none" loop />
-
       {/* fixed sticky viewport hosting the webgl canvas */}
       <div className="sticky top-0 w-full h-screen overflow-hidden">
         {/* primary three.js webgl canvas */}
