@@ -223,7 +223,7 @@ export function WorldExperience() {
               <div className="absolute inset-2 rounded-full border-2 border-white/10 border-b-orange-400 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
             </div>
             <div className="text-xs font-mono tracking-[0.25em] text-white/70 uppercase">
-              COMPLINING ASSETS
+              COMPILING ASSETS
             </div>
           </div>
         )}
