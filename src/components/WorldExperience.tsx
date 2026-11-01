@@ -233,7 +233,7 @@ export function WorldExperience() {
           >
             <div className="max-w-4xl mx-auto mb-8">
               <div className="font-mono text-xs tracking-[0.3em] text-white/50 uppercase mb-2">
-                COLORWALL SANCTUARY
+                The Laxenta Team (it's just me).
               </div>
               <h2 className="font-[family-name:var(--font-outfit)] text-3xl md:text-5xl font-light text-white tracking-tight mb-3">
                 Shape The Foundation
