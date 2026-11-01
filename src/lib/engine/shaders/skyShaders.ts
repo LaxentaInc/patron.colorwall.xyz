@@ -68,39 +68,3 @@ void main() {
   gl_FragColor = vec4(rgb, alpha);
 }
 `;
-
-
-// vertex shader for valley cloud billboard planes
-export const valleyCloudVertexShader = /* glsl */ `
-varying vec2 v_uv;
-
-void main() {
-  v_uv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`;
-
-// fragment shader for valley clouds with scroll progress reveal and daylight dimming
-export const valleyCloudFragmentShader = /* glsl */ `
-uniform sampler2D u_texture;
-uniform float u_scrollAlpha;
-uniform float u_dimRatio;
-uniform float u_opacity;
-uniform vec3 u_tintDay;
-uniform vec3 u_tintNight;
-
-varying vec2 v_uv;
-
-void main() {
-  vec4 tex = texture2D(u_texture, v_uv);
-  if (tex.a < 0.005) discard;
-
-  // interpolate cloud color from soft alpine mist to deep twilight
-  vec3 tint = mix(u_tintDay, u_tintNight, clamp(u_dimRatio, 0.0, 1.0));
-  vec3 rgb = tex.rgb * tint;
-  float alpha = tex.a * u_opacity * u_scrollAlpha;
-
-  gl_FragColor = vec4(rgb, alpha);
-}
-`;
-

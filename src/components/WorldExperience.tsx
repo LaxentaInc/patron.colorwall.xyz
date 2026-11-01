@@ -200,14 +200,14 @@ export function WorldExperience() {
             }}
             transition={{ duration: 0.5 }}
           >
-            <div className="font-mono text-xs tracking-[0.25em] text-white/50 uppercase mb-3">
-              SKELETAL FLIGHT
-            </div>
+            {/* <div className="font-mono text-xs tracking-[0.25em] text-white/50 uppercase mb-3">
+              Hi THERE!
+            </div> */}
             <h2 className="font-[family-name:var(--font-outfit)] text-2xl md:text-4xl font-extralight text-white tracking-tight mb-2">
-              GPU-DRIVEN DYNAMICS
+              THE COLORWALL TEAM!
             </h2>
             <p className="font-[family-name:var(--font-outfit)] text-sm md:text-base text-white/60 font-light leading-relaxed">
-              Deforming 21 vertex bones in real-time along a 3D spline trajectory through volumetric mist.
+              We are us, we make cool stuff when we feel bored, and get bored when we make cool stuff, it is a cycle but atleast we make cool stuff
             </p>
           </motion.div>
 
@@ -223,7 +223,7 @@ export function WorldExperience() {
             transition={{ duration: 0.5 }}
           >
             <div className="font-mono text-xs tracking-[0.25em] text-white/50 uppercase mb-4">
-              JOIN THE ARCHITECTS
+              
             </div>
             <h2 className="font-[family-name:var(--font-outfit)] text-3xl md:text-6xl font-light text-white tracking-tight leading-tight mb-4">
               SHAPE THE FUTURE OF COLORWALL
@@ -252,7 +252,7 @@ export function WorldExperience() {
               <div className="absolute inset-2 rounded-full border-2 border-white/10 border-b-orange-400 animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
             </div>
             <div className="text-xs font-mono tracking-[0.25em] text-white/70 uppercase">
-              INITIALIZING WORLD ENGINE
+              COMPLINING ASSETS
             </div>
           </div>
         )}

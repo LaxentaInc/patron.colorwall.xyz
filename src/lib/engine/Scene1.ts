@@ -1,13 +1,6 @@
 import * as THREE from "three";
 import { BufLoader } from "./BufLoader";
-import {
-  skyVertexShader,
-  skyFragmentShader,
-  cloudVertexShader,
-  cloudFragmentShader,
-  valleyCloudVertexShader,
-  valleyCloudFragmentShader,
-} from "./shaders/skyShaders";
+import { skyVertexShader, skyFragmentShader, cloudVertexShader, cloudFragmentShader } from "./shaders/skyShaders";
 import { mountainVertexShader, mountainFragmentShader } from "./shaders/mountainShaders";
 import { birdVertexShader, birdFragmentShader } from "./shaders/birdShaders";
 import {
@@ -70,17 +63,6 @@ export class Scene1 {
     u_tintNight: { value: new THREE.Color("#2c3e55") },
   };
 
-  // valley clouds group and scroll responsive animation references
-  private valleyCloudsGroup = new THREE.Group();
-  private valleyCloudMeshes: THREE.Mesh[] = [];
-  private valleyCloudBasePositions: THREE.Vector3[] = [];
-  private valleyCloudUniforms = {
-    u_scrollAlpha: { value: 0 },
-    u_dimRatio: { value: 0 },
-    u_tintDay: { value: new THREE.Color("#f1f5f9") },
-    u_tintNight: { value: new THREE.Color("#1e293b") },
-  };
-
   // bird mesh references and skeletal data textures
   private birdMesh: THREE.Mesh | null = null;
   private birdPathPositions: Float32Array | null = null;
@@ -130,13 +112,11 @@ export class Scene1 {
       this.container.add(skyMesh);
 
       // 2. load background mountains & ridge textures
-      const [bgTex, ridgeTex, mountainTex, cloudTex, valleyCloudTex1, valleyCloudTex2] = await Promise.all([
+      const [bgTex, ridgeTex, mountainTex, cloudTex] = await Promise.all([
         this.loadTextureAsync("/assets/textures/scene1/SC_01_BACKGROUND_MOUNTAINS_TEXTURE.webp"),
         this.loadTextureAsync("/assets/textures/scene1/SC_01_RIDGE_TEXTURE.webp"),
         this.loadTextureAsync("/assets/textures/scene1/SC_01_MOUNTAIN_TEXTURE.webp"),
         this.loadTextureAsync("/assets/textures/cloud.png"),
-        this.loadTextureAsync("/assets/izanami/common_fv_cloud01.webp"),
-        this.loadTextureAsync("/assets/izanami/common_fv_cloud02.webp"),
       ]);
 
       // 3. load terrain models
@@ -225,10 +205,7 @@ export class Scene1 {
       // 7. create atmospheric sky clouds
       this.createClouds(cloudTex);
 
-      // 8. create valley clouds for descent into mountain canyon
-      this.createValleyClouds(valleyCloudTex1, valleyCloudTex2);
-
-      // 9. create ambient floating particles
+      // 8. create ambient floating particles
       this.createParticles();
 
       // 8. load camera animation path
@@ -543,53 +520,6 @@ export class Scene1 {
     this.container.add(this.cloudsGroup);
   }
 
-  // generates volumetric valley cloud banks weaving through the mountain pass
-  private createValleyClouds(cloudTex1: THREE.Texture, cloudTex2: THREE.Texture): void {
-    cloudTex1.wrapS = THREE.ClampToEdgeWrapping;
-    cloudTex1.wrapT = THREE.ClampToEdgeWrapping;
-    cloudTex2.wrapS = THREE.ClampToEdgeWrapping;
-    cloudTex2.wrapT = THREE.ClampToEdgeWrapping;
-
-    const cloudAspect = 2.078; // aspect ratio of common_fv_cloud01 and cloud02
-    const cloudGeo = new THREE.PlaneGeometry(cloudAspect, 1.0);
-
-    // configuration of valley clouds placed along the descent canyon corridor
-    const valleyConfigs = [
-      { x: 380, y: 260, z: -550, scale: 650, opacity: 0.85, tex: cloudTex1 },
-      { x: -120, y: 190, z: -350, scale: 750, opacity: 0.80, tex: cloudTex2 },
-      { x: -380, y: 320, z: -150, scale: 700, opacity: 0.75, tex: cloudTex1 },
-      { x: 180, y: 210, z: -800, scale: 850, opacity: 0.82, tex: cloudTex1 },
-      { x: 50, y: 340, z: 200, scale: 800, opacity: 0.70, tex: cloudTex2 },
-      { x: 620, y: 180, z: -700, scale: 900, opacity: 0.75, tex: cloudTex1 },
-    ];
-
-    for (const cfg of valleyConfigs) {
-      const mat = new THREE.ShaderMaterial({
-        vertexShader: valleyCloudVertexShader,
-        fragmentShader: valleyCloudFragmentShader,
-        uniforms: {
-          ...this.valleyCloudUniforms,
-          u_texture: { value: cfg.tex },
-          u_opacity: { value: cfg.opacity },
-        },
-        transparent: true,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      });
-
-      const mesh = new THREE.Mesh(cloudGeo, mat);
-      mesh.position.set(cfg.x, cfg.y, cfg.z);
-      mesh.scale.set(cfg.scale, cfg.scale, 1.0);
-      mesh.renderOrder = 1;
-
-      this.valleyCloudMeshes.push(mesh);
-      this.valleyCloudBasePositions.push(mesh.position.clone());
-      this.valleyCloudsGroup.add(mesh);
-    }
-
-    this.container.add(this.valleyCloudsGroup);
-  }
-
   // helper to promisify texture loading
   private loadTextureAsync(url: string): Promise<THREE.Texture> {
     return new Promise((resolve, reject) => {
@@ -630,19 +560,6 @@ export class Scene1 {
       const mesh = this.cloudMeshes[i];
       const basePos = this.cloudBasePositions[i];
       mesh.position.x = basePos.x + Math.sin(time * 0.05 + i * 1.5) * 20;
-    }
-
-    // 5. update valley clouds scroll reveal and organic wind drift
-    const valleyScrollAlpha =
-      THREE.MathUtils.smoothstep(scrollProgress, 0.08, 0.22) *
-      (1.0 - THREE.MathUtils.smoothstep(scrollProgress, 0.65, 0.85));
-    this.valleyCloudUniforms.u_scrollAlpha.value = valleyScrollAlpha;
-    this.valleyCloudUniforms.u_dimRatio.value = dimRatio;
-    for (let i = 0; i < this.valleyCloudMeshes.length; i++) {
-      const mesh = this.valleyCloudMeshes[i];
-      const basePos = this.valleyCloudBasePositions[i];
-      mesh.position.x = basePos.x + Math.sin(time * 0.07 + i * 1.8) * 25;
-      mesh.position.y = basePos.y + Math.cos(time * 0.04 + i * 1.4) * 10;
     }
   }
 
