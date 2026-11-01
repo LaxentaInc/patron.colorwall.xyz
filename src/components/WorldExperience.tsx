@@ -261,11 +261,11 @@ export function WorldExperience() {
                   <ul className="space-y-3 mb-8 text-xs font-light text-white/70">
                     <li className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                      <span>Nightly bleeding-edge test builds</span>
+                      <span>Access to experimental builds, and more perks/gifts as we grow across every sister product.</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                      <span>Backer role in private Discord</span>
+                      <span>Coolest role on Discord</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-white/80 shrink-0" />
