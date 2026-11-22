@@ -135,8 +135,18 @@ export class WorldEngine {
     const deltaTime = Math.min(this.clock.getDelta(), 0.1);
     const elapsedTime = this.clock.getElapsedTime();
 
-    // smooth scroll damping
-    this.currentScroll += (this.targetScroll - this.currentScroll) * this.scrollDamp;
+    // if scene 3 is still loading buffers in the background, hold progress at entry threshold
+    let target = this.targetScroll;
+    if (!this.scene3.isLoaded && target > 0.70) {
+      target = 0.70;
+    }
+
+    // governor prevents rapid flick scrolling from jumping directly to the end of the scenes
+    // especially before textures or geometry buffers have finished stream decoding
+    const maxScrollDeltaPerFrame = deltaTime * 0.45;
+    const scrollDelta = target - this.currentScroll;
+    const clampedDelta = Math.max(-maxScrollDeltaPerFrame, Math.min(maxScrollDeltaPerFrame, scrollDelta * this.scrollDamp));
+    this.currentScroll += clampedDelta;
 
     // smooth mouse parallax damping
     this.currentMouseX += (this.targetMouseX - this.currentMouseX) * this.mouseDamp;
@@ -179,7 +189,7 @@ export class WorldEngine {
 
       // keep scene 3 pre-warmed for seamless landing
       if (p2 > 0.8) {
-        this.scene3.update(elapsedTime, 0.0, this.camera, isMobile);
+        this.scene3.update(elapsedTime, 0.0, this.camera, isMobile, deltaTime);
       }
     }
     // phase 3: lake sanctuary and water simulation (0.70 to 1.00)
@@ -196,7 +206,7 @@ export class WorldEngine {
         this.scene1.birdMesh.visible = p3 < 0.3;
       }
 
-      this.scene3.update(elapsedTime, p3, this.camera, isMobile);
+      this.scene3.update(elapsedTime, p3, this.camera, isMobile, deltaTime);
     }
 
     // apply subtle mouse parallax tilt on top of active camera orientation

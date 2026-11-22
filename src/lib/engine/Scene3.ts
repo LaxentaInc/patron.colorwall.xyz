@@ -7,6 +7,7 @@ import { skyVertexShader, skyFragmentShader } from "./shaders/skyShaders";
 export class Scene3 {
   public container = new THREE.Group();
   public isLoaded = false;
+  public currentProgress = 0;
 
   // shared uniforms for scene 3 water and landscape
   private skyColor0 = new THREE.Color("#18304c");
@@ -165,7 +166,7 @@ export class Scene3 {
   }
 
   // update lake animations and camera track interpolation
-  public update(time: number, lakeProgress: number, camera: THREE.PerspectiveCamera, isMobile: boolean): void {
+  public update(time: number, lakeProgress: number, camera: THREE.PerspectiveCamera, isMobile: boolean, deltaTime = 0.016): void {
     if (!this.isLoaded) return;
 
     this.sharedUniforms.u_time.value = time;
@@ -177,8 +178,15 @@ export class Scene3 {
 
     // interpolate camera position and rotation along the 120 keyframes of sc_03_camera.buf
     if (this.cameraKeyframes.positions && this.cameraKeyframes.orientations && this.cameraKeyframes.count > 1) {
-      const clamped = Math.max(0, Math.min(1, lakeProgress));
-      const floatIndex = clamped * (this.cameraKeyframes.count - 1);
+      const target = Math.max(0, Math.min(1, lakeProgress));
+      // smooth interpolation preventing camera from instantly jumping to spline endpoint when assets load late
+      // clamped rate limits camera advancement so flight along the spline always renders gracefully
+      const splineSpeed = 1.6;
+      const maxStep = Math.max(0.001, deltaTime * splineSpeed);
+      const diff = target - this.currentProgress;
+      this.currentProgress += Math.sign(diff) * Math.min(Math.abs(diff), maxStep);
+
+      const floatIndex = this.currentProgress * (this.cameraKeyframes.count - 1);
       const index0 = Math.floor(floatIndex);
       const index1 = Math.min(index0 + 1, this.cameraKeyframes.count - 1);
       const ratio = floatIndex - index0;

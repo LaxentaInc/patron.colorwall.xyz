@@ -143,13 +143,13 @@ export function WorldExperience() {
               {isAudioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-white" />}
             </button>
 
-            <div className="font-mono text-xs tracking-[0.25em] text-white/60 select-none">
+            {/* <div className="font-mono text-xs tracking-[0.25em] text-white/60 select-none">
               {scrollPercent < 0.35
                 ? `ALTITUDE ${Math.round(150 + (scrollPercent / 0.35) * 650)}M`
                 : scrollPercent < 0.70
                 ? `ALTITUDE ${Math.round(450 + ((scrollPercent - 0.35) / 0.35) * 650)}M`
                 : `ALTITUDE 22M; LAKE LEVEL`}
-            </div>
+            </div> */}
           </div>
         </header>
 
