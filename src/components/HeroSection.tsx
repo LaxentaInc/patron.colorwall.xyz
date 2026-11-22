@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { NavBar } from "./NavBar";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 
 // -------------------------------------------------------------------------
 // hero section - the main export.
@@ -39,6 +39,27 @@ export const HeroSection = () => {
   const textY = useTransform(scrollY, [0, 800], [0, -150]);
   const textOpacity = useTransform(scrollY, [100, 600], [1, 0]);
 
+  // mouse motion values for fluid interactive fog parallax
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX1 = useSpring(mouseX, { stiffness: 45, damping: 25 });
+  const springY1 = useSpring(mouseY, { stiffness: 45, damping: 25 });
+  const springX2 = useSpring(mouseX, { stiffness: 35, damping: 30 });
+  const springY2 = useSpring(mouseY, { stiffness: 35, damping: 30 });
+
+  // mouse move listener on window to drive real time fog reaction
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const normX = (e.clientX / window.innerWidth) * 2 - 1;
+      const normY = (e.clientY / window.innerHeight) * 2 - 1;
+      mouseX.set(normX * 45);
+      mouseY.set(normY * 30);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
+
   return (
     <section ref={containerRef} className="relative w-full bg-black" style={{ height: "100vh" }}>
 
@@ -59,38 +80,53 @@ export const HeroSection = () => {
           />
         </motion.div>
 
-        {/* cloud layer 1 - drifting horizontally and parallax */}
+        {/* cloud layer 1 - drifting horizontally and reactive to mouse parallax */}
         <motion.div
-          className="absolute inset-0 z-0 pointer-events-none w-[150%] h-[150%] -left-[25%] -top-[25%]"
-          style={{ x: cloud1X, y: cloud1Y, opacity: 0.8 }}
+          className="absolute inset-0 z-0 pointer-events-none w-[160%] h-[160%] -left-[30%] -top-[30%] will-change-transform"
+          style={{ x: cloud1X, y: cloud1Y, opacity: 0.85 }}
         >
-          <motion.img 
-            src="/assets/izanami/common_fv_cloud01.webp" 
-            alt="Fog Layer 1" 
-            className="object-cover absolute inset-0 w-full h-full" 
-            animate={{ 
-              x: ["-5%", "5%", "-5%"],
-              y: ["-2%", "2%", "-2%"],
-            }}
-            transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
-          />
+          <motion.div
+            style={{ x: springX1, y: springY1 }}
+            className="w-full h-full relative"
+          >
+            <motion.img 
+              src="/assets/izanami/common_fv_cloud01.webp" 
+              alt="Fog Layer 1" 
+              className="object-cover absolute inset-0 w-full h-full transform-gpu" 
+              animate={{ 
+                x: ["-4%", "4%", "-4%"],
+                y: ["-2%", "2%", "-2%"],
+                scale: [1, 1.04, 1],
+              }}
+              transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
+            />
+          </motion.div>
         </motion.div>
 
-        {/* cloud layer 2 - opposite drifting and parallax */}
+        {/* cloud layer 2 - opposite drifting and counter mouse parallax for 3d depth */}
         <motion.div
-          className="absolute inset-0 z-0 pointer-events-none w-[150%] h-[150%] -left-[25%] -top-[25%]"
-          style={{ x: cloud2X, y: cloud2Y, opacity: 0.7 }}
+          className="absolute inset-0 z-0 pointer-events-none w-[160%] h-[160%] -left-[30%] -top-[30%] will-change-transform"
+          style={{ x: cloud2X, y: cloud2Y, opacity: 0.75 }}
         >
-          <motion.img 
-            src="/assets/izanami/common_fv_cloud02.webp" 
-            alt="Fog Layer 2" 
-            className="object-cover absolute inset-0 w-full h-full" 
-            animate={{ 
-              x: ["5%", "-5%", "5%"],
-              y: ["2%", "-2%", "2%"],
+          <motion.div
+            style={{ 
+              x: useTransform(springX2, (v) => -v * 0.75), 
+              y: useTransform(springY2, (v) => -v * 0.75) 
             }}
-            transition={{ repeat: Infinity, duration: 35, ease: "easeInOut" }}
-          />
+            className="w-full h-full relative"
+          >
+            <motion.img 
+              src="/assets/izanami/common_fv_cloud02.webp" 
+              alt="Fog Layer 2" 
+              className="object-cover absolute inset-0 w-full h-full transform-gpu" 
+              animate={{ 
+                x: ["4%", "-4%", "4%"],
+                y: ["2%", "-2%", "2%"],
+                scale: [1.03, 1, 1.03],
+              }}
+              transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
+            />
+          </motion.div>
         </motion.div>
 
         {/* radial gradient overlay to darken edges for cinematic focus */}

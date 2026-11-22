@@ -17,6 +17,23 @@ export function WorldExperience() {
   const [scrollPercent, setScrollPercent] = useState(0);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [shouldBootEngine, setShouldBootEngine] = useState(false);
+
+  // gate 3d engine instantiation until the user scrolls ~100vh down past the hero section
+  // completely eliminates gpu overhead during the initial landing page load
+  useEffect(() => {
+    const checkScrollThreshold = () => {
+      if (typeof window !== "undefined" && window.scrollY >= window.innerHeight * 0.85) {
+        setShouldBootEngine(true);
+      }
+    };
+
+    checkScrollThreshold();
+    if (!shouldBootEngine) {
+      window.addEventListener("scroll", checkScrollThreshold, { passive: true });
+      return () => window.removeEventListener("scroll", checkScrollThreshold);
+    }
+  }, [shouldBootEngine]);
 
   // sync audio mute state with global soundtrack manager
   useEffect(() => {
@@ -54,6 +71,7 @@ export function WorldExperience() {
   });
 
   useEffect(() => {
+    if (!shouldBootEngine) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -91,7 +109,7 @@ export function WorldExperience() {
       engine.destroy();
       engineRef.current = null;
     };
-  }, []);
+  }, [shouldBootEngine]);
 
   // viewport observer and early window scroll listener to pre-warm the webgl engine well before reaching the section
   useEffect(() => {
