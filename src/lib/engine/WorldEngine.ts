@@ -18,7 +18,9 @@ export class WorldEngine {
   public lineTrails: LineTrails;
   public scene3: Scene3;
 
-  private isRunning = false;
+  public isRunning = false;
+  public isCompiled = false;
+  public readyTimestamp = 0;
   private rafId: number | null = null;
   private clock = new THREE.Clock();
 
@@ -99,7 +101,20 @@ export class WorldEngine {
     }
 
     // pre-compile all scene materials on the gpu upfront during the load screen to eliminate scroll lag
+    // temporarily make all scene containers visible so three.js does not skip their shader programs
+    this.scene1.container.visible = true;
+    this.scene2.container.visible = true;
+    this.lineTrails.container.visible = true;
+    this.scene3.container.visible = true;
     this.renderer.compile(this.scene, this.camera);
+
+    // restore visibility for initial state
+    this.scene2.container.visible = false;
+    this.lineTrails.container.visible = false;
+    this.scene3.container.visible = false;
+
+    this.isCompiled = true;
+    this.readyTimestamp = performance.now();
 
     this.onResize();
     this.start();
@@ -267,6 +282,11 @@ export class WorldEngine {
 
   // updates target scroll progress normalized between 0.0 and 1.0
   public setScrollProgress(progress: number): void {
+    // lock scroll progress for 500ms after compilation completes to prevent initial flick jumps
+    if (this.readyTimestamp === 0 || performance.now() - this.readyTimestamp < 500) {
+      this.targetScroll = 0;
+      return;
+    }
     this.targetScroll = THREE.MathUtils.clamp(progress, 0, 1);
   }
 

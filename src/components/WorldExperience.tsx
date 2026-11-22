@@ -93,11 +93,12 @@ export function WorldExperience() {
     };
   }, []);
 
-  // viewport observer to halt three.js render loop when out of screen, eliminating background gpu load
+  // viewport observer and early window scroll listener to pre-warm the webgl engine well before reaching the section
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    // expanded root margin pre-warms webgl pipeline 1500px before container enters viewport
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -109,11 +110,23 @@ export function WorldExperience() {
           }
         });
       },
-      { rootMargin: "300px" }
+      { rootMargin: "1500px" }
     );
 
     observer.observe(container);
-    return () => observer.disconnect();
+
+    // early scroll listener to ensure engine starts immediately on initial user interaction
+    const handleFirstScroll = () => {
+      if (engineRef.current && !engineRef.current.isRunning) {
+        engineRef.current.start();
+      }
+    };
+    window.addEventListener("scroll", handleFirstScroll, { passive: true, once: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", handleFirstScroll);
+    };
   }, [isEngineReady]);
 
   // audio toggle handler triggering global ambient soundtrack engine
