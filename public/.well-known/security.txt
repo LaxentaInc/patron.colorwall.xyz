@@ -1,0 +1,6 @@
+# security disclosure policy for patron.colorwall.xyz
+contact: mailto:contact@laxenta.com
+expires: 2027-12-31t23:59:59.000z
+preferred-languages: en
+canonical: https://patron.colorwall.xyz/.well-known/security.txt
+policy: https://www.colorwall.xyz/terms
